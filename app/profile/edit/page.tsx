@@ -80,7 +80,7 @@ export default function ProfileEditPage() {
         <div className="avatar-edit-wrap">
           <button
             type="button"
-            className="avatar-edit"
+            className={`avatar-edit${photo ? " has-photo" : ""}`}
             onClick={() => {
               try {
                 fileRef.current?.click();
