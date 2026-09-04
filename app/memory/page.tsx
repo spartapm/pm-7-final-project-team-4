@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, TabBar, Meatball, Modal } from "@/components/ui";
+import { MemoryGridSkeleton, QueryError } from "@/components/system";
 import { dateKey, track } from "@/lib/format";
 
 export default function MemoryPage() {
   const router = useRouter();
-  const { hydrated, loggedIn, pet, visibleMemories, deleteMemory } = useStore();
+  const { hydrated, loggedIn, pet, visibleMemories, deleteMemory, cloudStatus, querying, showSkeleton } =
+    useStore();
   const [sort, setSort] = useState<"latest" | "oldest">("latest");
   const [openSort, setOpenSort] = useState(false);
   const [menuId, setMenuId] = useState<string | null>(null);
@@ -34,6 +36,10 @@ export default function MemoryPage() {
   if (!hydrated || !pet) return <div className="shell" />;
 
   const bg = pet.journey === "before" ? "/bg/bg_before.png" : "/bg/bg_after.png";
+
+  if (cloudStatus === "error" && !querying) {
+    return <QueryError bg={bg} />;
+  }
 
   return (
     <PhoneShell bg={bg}>
@@ -67,7 +73,9 @@ export default function MemoryPage() {
           </div>
         ) : null}
       </div>
-      {cards.length === 0 ? (
+      {showSkeleton ? (
+        <MemoryGridSkeleton />
+      ) : cards.length === 0 ? (
         <div className="list-empty">
           아직 완료한 리스트가 없어요.
           <br />

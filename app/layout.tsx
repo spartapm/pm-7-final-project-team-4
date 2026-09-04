@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { CloudBanner } from "@/components/CloudBanner";
+import { ActionErrorBar } from "@/components/system";
 
 export const metadata: Metadata = {
   title: "Pet Memory",
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <Providers>
           <CloudBanner />
+          <ActionErrorBar />
           {children}
         </Providers>
       </body>

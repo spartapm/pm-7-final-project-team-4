@@ -86,9 +86,17 @@ function cloudPayload(s: AppState) {
 type Store = AppState & {
   hydrated: boolean;
   cloudStatus: CloudStatus;
-  login: () => void;
+  querying: boolean;
+  showSkeleton: boolean;
+  actionError: boolean;
+  login: (kakaoId?: string) => void;
   logout: () => void;
   withdraw: () => void;
+  retryPull: () => void;
+  retryPush: () => void;
+  clearActionError: () => void;
+  isSessionValid: () => boolean;
+  parkForRelogin: (itemId?: string, draft?: DraftRecord) => void;
   completeOnboarding: (pet: Pet) => void;
   updatePet: (pet: Partial<Pet>) => void;
   switchJourney: (journey: Journey) => void;
@@ -110,6 +118,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(empty);
   const [hydrated, setHydrated] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>("off");
+  const [querying, setQuerying] = useState(false);
+  const [slowQuery, setSlowQuery] = useState(false);
+  const [actionError, setActionError] = useState(false);
   const skipPush = useRef(true);
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -118,13 +129,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     mutGen.current += 1;
   };
 
-  useEffect(() => {
-    const local = load();
-    setState(local);
-    setHydrated(true);
-    const genAtPull = mutGen.current;
+  const applyPushStatus = useCallback((status: CloudStatus) => {
+    if (status === "error") setActionError(true);
+    if (status === "ok") setActionError(false);
+    if (status !== "off") setCloudStatus(status);
+  }, []);
 
-    pullAccount(local.accountId).then((res) => {
+  const runPull = useCallback(async (accountId: string, seed?: AppState) => {
+    const local = seed ?? stateRef.current;
+    const genAtPull = mutGen.current;
+    setQuerying(true);
+    setSlowQuery(false);
+    const timer = window.setTimeout(() => setSlowQuery(true), 500);
+    try {
+      const res = await pullAccount(accountId);
       setCloudStatus(res.status);
       if (res.status !== "ok" || !res.data) return;
       if (mutGen.current !== genAtPull) return;
@@ -143,10 +161,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return;
       }
       if (local.pet || local.items.length || local.memories.length) {
-        pushAccount(cloudPayload(local)).then(setCloudStatus);
+        applyPushStatus(await pushAccount(cloudPayload({ ...local, accountId })));
       }
-    });
-  }, []);
+    } finally {
+      window.clearTimeout(timer);
+      setQuerying(false);
+      setSlowQuery(false);
+    }
+  }, [applyPushStatus]);
+
+  useEffect(() => {
+    const local = load();
+    stateRef.current = local;
+    setState(local);
+    setHydrated(true);
+    void runPull(local.accountId, local);
+  }, [runPull]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -160,9 +190,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return;
     }
     const handle = window.setTimeout(() => {
-      pushAccount(cloudPayload(stateRef.current)).then((status) => {
-        if (status !== "off") setCloudStatus(status);
-      });
+      pushAccount(cloudPayload(stateRef.current)).then(applyPushStatus);
     }, 400);
     return () => window.clearTimeout(handle);
   }, [
@@ -174,12 +202,51 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     state.seeded,
     state.loginAt,
     state.loggedIn,
+    applyPushStatus,
   ]);
 
-  const login = useCallback(() => {
+  const login = useCallback(
+    (kakaoId?: string) => {
+      touch();
+      const prev = stateRef.current;
+      const nextId = kakaoId ? `kakao_${kakaoId}` : prev.accountId;
+      const next = { ...prev, accountId: nextId, loggedIn: true, loginAt: Date.now() };
+      stateRef.current = next;
+      skipPush.current = Boolean(kakaoId);
+      setState(next);
+      track("sign_up", { method: "kakao" });
+      if (kakaoId) void runPull(nextId, next);
+    },
+    [runPull]
+  );
+
+  const retryPull = useCallback(() => {
+    void runPull(stateRef.current.accountId);
+  }, [runPull]);
+
+  const retryPush = useCallback(() => {
+    void pushAccount(cloudPayload(stateRef.current)).then(applyPushStatus);
+  }, [applyPushStatus]);
+
+  const clearActionError = useCallback(() => setActionError(false), []);
+
+  const isSessionValid = useCallback(() => {
+    const s = stateRef.current;
+    if (!s.loggedIn || !s.loginAt) return false;
+    return Date.now() - s.loginAt <= SESSION_MS;
+  }, []);
+
+  const parkForRelogin = useCallback((itemId?: string, draft?: DraftRecord) => {
     touch();
-    setState((s) => ({ ...s, loggedIn: true, loginAt: Date.now() }));
-    track("sign_up", { method: "kakao" });
+    setState((s) => ({
+      ...s,
+      loggedIn: false,
+      loginAt: null,
+      items:
+        itemId && draft
+          ? s.items.map((it) => (it.id === itemId ? { ...it, draft } : it))
+          : s.items,
+    }));
   }, []);
 
   const logout = useCallback(() => {
@@ -371,9 +438,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     ...state,
     hydrated,
     cloudStatus,
+    querying,
+    showSkeleton: querying && slowQuery,
+    actionError,
     login,
     logout,
     withdraw,
+    retryPull,
+    retryPush,
+    clearActionError,
+    isSessionValid,
+    parkForRelogin,
     completeOnboarding,
     updatePet,
     switchJourney,

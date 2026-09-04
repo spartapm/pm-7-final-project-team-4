@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell } from "@/components/ui";
+import { MemoryDetailSkeleton, QueryError } from "@/components/system";
 import { track } from "@/lib/format";
 
 export default function MemoryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { hydrated, loggedIn, pet, memories } = useStore();
+  const { hydrated, loggedIn, pet, memories, cloudStatus, querying, showSkeleton } = useStore();
   const mem = memories.find((m) => m.id === id);
   const [idx, setIdx] = useState(0);
 
@@ -24,6 +25,24 @@ export default function MemoryDetailPage() {
   }, [mem]);
 
   if (!hydrated || !pet) return <div className="shell" />;
+  if (cloudStatus === "error" && !querying) {
+    return <QueryError cream tabs={false} />;
+  }
+  if (showSkeleton && !mem) {
+    return (
+      <PhoneShell cream>
+        <div className="topbar">
+          <button className="back" type="button" onClick={() => router.back()}>
+            ‹
+          </button>
+          <h1>기록</h1>
+          <div />
+        </div>
+        <div className="hairline" />
+        <MemoryDetailSkeleton />
+      </PhoneShell>
+    );
+  }
   if (!mem) {
     return (
       <PhoneShell cream>

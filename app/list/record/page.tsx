@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, Calendar, Modal } from "@/components/ui";
 import { todayDots, track } from "@/lib/format";
+import { resizePhoto } from "@/lib/image";
 
 function RecordInner() {
   const router = useRouter();
@@ -22,6 +23,8 @@ function RecordInner() {
     saveDraft,
     completeNew,
     updateMemory,
+    isSessionValid,
+    parkForRelogin,
   } = useStore();
 
   const item = items.find((it) => it.id === itemId);
@@ -57,7 +60,9 @@ function RecordInner() {
   const [toast, setToast] = useState("");
   const [busy, setBusy] = useState(false);
   const [interacted, setInteracted] = useState<Record<string, boolean>>({});
+  const [photoPerm, setPhotoPerm] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const storyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -76,6 +81,13 @@ function RecordInner() {
     setPhotos(initial.photos);
   }, [initial]);
 
+  useEffect(() => {
+    const el = storyRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.max(140, el.scrollHeight)}px`;
+  }, [story]);
+
   const dirty =
     title !== initial.title ||
     story !== initial.story ||
@@ -88,22 +100,48 @@ function RecordInner() {
     track("record_field_interact", { field_name: field });
   }
 
-  function addPhotos(files: FileList | null) {
+  function parkIfExpired() {
+    if (isSessionValid()) return false;
+    const draft = { title, story, date, photos };
+    if (itemId) parkForRelogin(itemId, draft);
+    else if (memory) {
+      updateMemory(memory.id, {
+        title: title.trim() || memory.title,
+        story: story.trim() || memory.story,
+        date,
+        photos,
+      });
+      parkForRelogin();
+    } else {
+      parkForRelogin();
+    }
+    router.replace("/");
+    return true;
+  }
+
+  async function addPhotos(files: FileList | null) {
     if (!files) return;
     const room = 5 - photos.length;
     const list = Array.from(files).slice(0, room);
-    list.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
+    for (const file of list) {
+      try {
+        const dataUrl = await resizePhoto(file);
         setPhotos((p) => {
           if (p.length >= 5) return p;
-          const next = [...p, String(reader.result)];
+          const next = [...p, dataUrl];
           track("record_photo_add", { photo_count: next.length });
           return next;
         });
-      };
-      reader.readAsDataURL(file);
-    });
+      } catch (err) {
+        const name = err instanceof DOMException ? err.name : "";
+        if (name === "NotAllowedError" || name === "SecurityError") {
+          setPhotoPerm(true);
+          return;
+        }
+        setToast("사진을 불러오지 못했어요");
+        setTimeout(() => setToast(""), 1600);
+      }
+    }
   }
 
   function goBack() {
@@ -112,6 +150,7 @@ function RecordInner() {
   }
 
   function doTempSave() {
+    if (parkIfExpired()) return;
     if (!itemId) {
       router.back();
       return;
@@ -122,6 +161,7 @@ function RecordInner() {
   }
 
   function doComplete() {
+    if (parkIfExpired()) return;
     if (!title.trim() || !story.trim()) {
       setFail(true);
       track("record_complete_fail", { fail_reason: "validation" });
@@ -194,6 +234,7 @@ function RecordInner() {
         />
         <label className="lbl">우리의 이야기</label>
         <textarea
+          ref={storyRef}
           value={story}
           maxLength={1000}
           placeholder="소중한 순간들을 기록해보세요. (200자 내)"
@@ -210,7 +251,11 @@ function RecordInner() {
               type="button"
               onClick={() => {
                 mark("photo");
-                fileRef.current?.click();
+                try {
+                  fileRef.current?.click();
+                } catch {
+                  setPhotoPerm(true);
+                }
               }}
             >
               +
@@ -254,6 +299,7 @@ function RecordInner() {
           confirm="저장하고 나가기"
           onCancel={() => router.back()}
           onConfirm={() => {
+            if (parkIfExpired()) return;
             if (itemId) saveDraft(itemId, { title, story, date, photos });
             router.back();
           }}
@@ -283,6 +329,19 @@ function RecordInner() {
           onConfirm={() => {
             track("record_retry_click", { retry_count: 1 });
             setFail(false);
+          }}
+        />
+      ) : null}
+      {photoPerm ? (
+        <Modal
+          title="설정에서 사진 접근을 허용해주세요"
+          cancel="돌아가기"
+          confirm="설정으로 이동"
+          onCancel={() => setPhotoPerm(false)}
+          onConfirm={() => {
+            setPhotoPerm(false);
+            setToast("브라우저 주소창 자물쇠에서 사진 권한을 허용해주세요");
+            setTimeout(() => setToast(""), 2400);
           }}
         />
       ) : null}
