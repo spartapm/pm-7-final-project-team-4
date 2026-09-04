@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { formatDateDots } from "@/lib/format";
 
 export function PhoneShell({
@@ -30,6 +30,12 @@ export function TabBar() {
     { href: "/memory", src: "/icons/nav_memory_default_icon.png", key: "memory" },
     { href: "/profile", src: "/icons/nav_profile_default_icon.png", key: "profile" },
   ];
+
+  useEffect(() => {
+    document.querySelectorAll(".scroll").forEach((el) => {
+      (el as HTMLElement).scrollTop = 0;
+    });
+  }, [path]);
   return (
     <nav className="tabbar">
       {tabs.map((t) => {

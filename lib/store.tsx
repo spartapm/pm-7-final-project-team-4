@@ -10,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { flushSync } from "react-dom";
 import {
   AFTER_EXAMPLES,
   BEFORE_EXAMPLES,
@@ -48,7 +49,10 @@ function load(): AppState {
     if (parsed.loggedIn && parsed.loginAt && Date.now() - parsed.loginAt > SESSION_MS) {
       return {
         ...fallback,
+        ...parsed,
         accountId: parsed.accountId || fallback.accountId,
+        loggedIn: false,
+        loginAt: null,
       };
     }
     return {
@@ -89,6 +93,8 @@ type Store = AppState & {
   querying: boolean;
   showSkeleton: boolean;
   actionError: boolean;
+  actionBusy: boolean;
+  runAction: (fn: () => void) => Promise<CloudStatus>;
   login: (kakaoId?: string) => void;
   logout: () => void;
   withdraw: () => void;
@@ -121,7 +127,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [querying, setQuerying] = useState(false);
   const [slowQuery, setSlowQuery] = useState(false);
   const [actionError, setActionError] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
   const skipPush = useRef(true);
+  const actionLock = useRef(false);
   const stateRef = useRef(state);
   stateRef.current = state;
   const mutGen = useRef(0);
@@ -180,6 +188,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
+    const expireIdle = () => {
+      const s = stateRef.current;
+      if (!s.loggedIn || !s.loginAt) return;
+      if (Date.now() - s.loginAt <= SESSION_MS) return;
+      touch();
+      setState((prev) => ({ ...prev, loggedIn: false, loginAt: null }));
+    };
+    expireIdle();
+    const timer = window.setInterval(expireIdle, 30_000);
+    const onVis = () => {
+      if (document.visibilityState === "visible") expireIdle();
+    };
+    window.addEventListener("focus", expireIdle);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", expireIdle);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem(KEY, JSON.stringify(state));
   }, [hydrated, state]);
 
@@ -227,6 +258,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const retryPush = useCallback(() => {
     void pushAccount(cloudPayload(stateRef.current)).then(applyPushStatus);
   }, [applyPushStatus]);
+
+  const runAction = useCallback(
+    async (fn: () => void) => {
+      if (actionLock.current) return "ok";
+      actionLock.current = true;
+      setActionBusy(true);
+      try {
+        skipPush.current = true;
+        flushSync(fn);
+        const status = await pushAccount(cloudPayload(stateRef.current));
+        applyPushStatus(status);
+        return status;
+      } finally {
+        actionLock.current = false;
+        setActionBusy(false);
+      }
+    },
+    [applyPushStatus]
+  );
 
   const clearActionError = useCallback(() => setActionError(false), []);
 
@@ -441,6 +491,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     querying,
     showSkeleton: querying && slowQuery,
     actionError,
+    actionBusy,
+    runAction,
     login,
     logout,
     withdraw,

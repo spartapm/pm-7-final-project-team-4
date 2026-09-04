@@ -9,7 +9,7 @@ import { dateKey, track } from "@/lib/format";
 
 export default function MemoryPage() {
   const router = useRouter();
-  const { hydrated, loggedIn, pet, visibleMemories, deleteMemory, cloudStatus, querying, showSkeleton } =
+  const { hydrated, loggedIn, pet, visibleMemories, deleteMemory, cloudStatus, querying, showSkeleton, actionBusy, runAction } =
     useStore();
   const [sort, setSort] = useState<"latest" | "oldest">("latest");
   const [openSort, setOpenSort] = useState(false);
@@ -124,14 +124,17 @@ export default function MemoryPage() {
         <Modal
           title="메모리를 삭제할까요?"
           confirm="삭제하기"
+          busy={actionBusy}
           onCancel={() => {
             setDelId(null);
             setMenuId(null);
           }}
-          onConfirm={() => {
-            deleteMemory(delId);
-            setDelId(null);
-            setMenuId(null);
+          onConfirm={async () => {
+            const status = await runAction(() => deleteMemory(delId));
+            if (status !== "error") {
+              setDelId(null);
+              setMenuId(null);
+            }
           }}
         />
       ) : null}

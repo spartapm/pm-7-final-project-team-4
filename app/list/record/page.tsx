@@ -25,6 +25,8 @@ function RecordInner() {
     updateMemory,
     isSessionValid,
     parkForRelogin,
+    runAction,
+    actionBusy,
   } = useStore();
 
   const item = items.find((it) => it.id === itemId);
@@ -66,8 +68,8 @@ function RecordInner() {
 
   useEffect(() => {
     if (!hydrated) return;
-    if (!loggedIn) router.replace("/");
-    else if (!pet) router.replace("/onboarding");
+    if (!loggedIn) return;
+    if (!pet) router.replace("/onboarding");
   }, [hydrated, loggedIn, pet, router]);
 
   useEffect(() => {
@@ -119,6 +121,11 @@ function RecordInner() {
     return true;
   }
 
+  useEffect(() => {
+    if (!hydrated || loggedIn) return;
+    parkIfExpired();
+  }, [hydrated, loggedIn]);
+
   async function addPhotos(files: FileList | null) {
     if (!files) return;
     const room = 5 - photos.length;
@@ -149,18 +156,21 @@ function RecordInner() {
     else router.back();
   }
 
-  function doTempSave() {
+  async function doTempSave() {
     if (parkIfExpired()) return;
     if (!itemId) {
       router.back();
       return;
     }
-    saveDraft(itemId, { title, story, date, photos });
+    setBusy(true);
+    const status = await runAction(() => saveDraft(itemId, { title, story, date, photos }));
+    setBusy(false);
+    if (status === "error") return;
     setToast("임시 저장을 완료했어요!");
     setTimeout(() => setToast(""), 1600);
   }
 
-  function doComplete() {
+  async function doComplete() {
     if (parkIfExpired()) return;
     if (!title.trim() || !story.trim()) {
       setFail(true);
@@ -168,19 +178,20 @@ function RecordInner() {
       return;
     }
     setBusy(true);
-    try {
+    const status = await runAction(() => {
       if (isEdit && memory) {
         updateMemory(memory.id, { title: title.trim(), story: story.trim(), date, photos });
       } else if (itemId) {
         completeNew(itemId, { title: title.trim(), story: story.trim(), date, photos });
       }
-      setSaved(true);
-    } catch {
+    });
+    setBusy(false);
+    if (status === "error") {
       setFail(true);
       track("record_complete_fail", { fail_reason: "server" });
-    } finally {
-      setBusy(false);
+      return;
     }
+    setSaved(true);
   }
 
   if (!hydrated || !pet) return <div className="shell" />;
@@ -283,10 +294,10 @@ function RecordInner() {
         />
       </div>
       <div className="form-actions">
-        <button className="btn-ghost" type="button" disabled={busy} onClick={doTempSave}>
-          임시 저장
+        <button className="btn-ghost" type="button" disabled={busy || actionBusy} onClick={doTempSave}>
+          {busy ? <span className="spinner" /> : "임시 저장"}
         </button>
-        <button className="btn-fill" type="button" disabled={busy} onClick={doComplete}>
+        <button className="btn-fill" type="button" disabled={busy || actionBusy} onClick={doComplete}>
           {busy ? <span className="spinner" /> : "완료"}
         </button>
       </div>
@@ -297,10 +308,14 @@ function RecordInner() {
           title={"변경된 내용이 있어요.\n임시 저장할까요?"}
           cancel="나가기"
           confirm="저장하고 나가기"
+          busy={actionBusy}
           onCancel={() => router.back()}
-          onConfirm={() => {
+          onConfirm={async () => {
             if (parkIfExpired()) return;
-            if (itemId) saveDraft(itemId, { title, story, date, photos });
+            if (itemId) {
+              const status = await runAction(() => saveDraft(itemId, { title, story, date, photos }));
+              if (status === "error") return;
+            }
             router.back();
           }}
         />

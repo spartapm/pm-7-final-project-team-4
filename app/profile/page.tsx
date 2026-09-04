@@ -9,7 +9,7 @@ import type { Journey } from "@/lib/types";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { hydrated, loggedIn, pet, switchJourney, logout, withdraw } = useStore();
+  const { hydrated, loggedIn, pet, switchJourney, logout, withdraw, actionBusy, runAction } = useStore();
   const [modal, setModal] = useState<"mode" | "logout" | "leave" | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -98,17 +98,15 @@ export default function ProfilePage() {
             </>
           }
           confirm="변경하기"
-          busy={busy}
+          busy={actionBusy}
           onCancel={() => {
             track("journey_switch_cancel");
             setModal(null);
           }}
-          onConfirm={() => {
-            setBusy(true);
-            switchJourney(target);
+          onConfirm={async () => {
+            const status = await runAction(() => switchJourney(target));
             track("journey_switch_confirm", { from_type: "before", to_type: "after" });
-            setBusy(false);
-            setModal(null);
+            if (status !== "error") setModal(null);
           }}
         />
       ) : null}
@@ -125,17 +123,15 @@ export default function ProfilePage() {
             </>
           }
           confirm="변경하기"
-          busy={busy}
+          busy={actionBusy}
           onCancel={() => {
             track("journey_switch_cancel");
             setModal(null);
           }}
-          onConfirm={() => {
-            setBusy(true);
-            switchJourney(target);
+          onConfirm={async () => {
+            const status = await runAction(() => switchJourney(target));
             track("journey_switch_confirm", { from_type: "after", to_type: "before" });
-            setBusy(false);
-            setModal(null);
+            if (status !== "error") setModal(null);
           }}
         />
       ) : null}
@@ -144,8 +140,10 @@ export default function ProfilePage() {
         <Modal
           title="로그아웃 할까요?"
           confirm="로그아웃"
+          busy={busy}
           onCancel={() => setModal(null)}
           onConfirm={() => {
+            setBusy(true);
             logout();
             router.replace("/");
           }}
@@ -157,8 +155,10 @@ export default function ProfilePage() {
           title="회원 탈퇴를 진행할까요?"
           body={"회원 탈퇴 시 계정 및 데이터는 \n영구 삭제되며 복구할 수 없어요!"}
           confirm="탈퇴하기"
+          busy={busy}
           onCancel={() => setModal(null)}
           onConfirm={() => {
+            setBusy(true);
             withdraw();
             router.replace("/");
           }}

@@ -3,19 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { PhoneShell, TabBar } from "@/components/ui";
+import { PhoneShell, TabBar, Modal } from "@/components/ui";
 import { NAME_RE, type Species } from "@/lib/types";
 import { track } from "@/lib/format";
 
 export default function ProfileEditPage() {
   const router = useRouter();
-  const { hydrated, loggedIn, pet, updatePet } = useStore();
+  const { hydrated, loggedIn, pet, updatePet, runAction, actionBusy } = useStore();
   const [species, setSpecies] = useState<Species>(pet?.species ?? "dog");
   const [name, setName] = useState(pet?.name ?? "");
   const [age, setAge] = useState(pet?.age == null ? "" : String(pet.age));
   const [photo, setPhoto] = useState(pet?.photo ?? "");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [open, setOpen] = useState(false);
+  const [photoPerm, setPhotoPerm] = useState(false);
+  const [toast, setToast] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function ProfileEditPage() {
 
   if (!hydrated || !pet) return <div className="shell" />;
 
-  function save() {
+  async function save() {
     const next: Record<string, string> = {};
     const n = name.trim();
     if (!n) next.name = "이름을 작성해주세요";
@@ -49,12 +51,15 @@ export default function ProfileEditPage() {
     if (species !== pet!.species) changed.push("species");
     if (n !== pet!.name) changed.push("name");
     if ((age === "" ? null : Number(age)) !== pet!.age) changed.push("age");
-    updatePet({
-      species,
-      name: n,
-      age: age === "" ? null : Number(age),
-      photo: photo || undefined,
-    });
+    const status = await runAction(() =>
+      updatePet({
+        species,
+        name: n,
+        age: age === "" ? null : Number(age),
+        photo: photo || undefined,
+      })
+    );
+    if (status === "error") return;
     track("profile_edit_complete", { changed_fields: changed.join(",") || "none" });
     router.back();
   }
@@ -66,14 +71,24 @@ export default function ProfileEditPage() {
           ‹
         </button>
         <h1>프로필 수정</h1>
-        <button className="right" type="button" onClick={save}>
-          저장
+        <button className="right" type="button" onClick={save} disabled={actionBusy}>
+          {actionBusy ? <span className="spinner" /> : "저장"}
         </button>
       </div>
       <div className="hairline" />
       <div className="scroll profile">
         <div className="avatar-edit-wrap">
-          <button type="button" className="avatar-edit" onClick={() => fileRef.current?.click()}>
+          <button
+            type="button"
+            className="avatar-edit"
+            onClick={() => {
+              try {
+                fileRef.current?.click();
+              } catch {
+                setPhotoPerm(true);
+              }
+            }}
+          >
             <img
               className="face"
               src={photo || "/icons/profile_camera_icon.png"}
@@ -87,10 +102,16 @@ export default function ProfileEditPage() {
             accept="image/*"
             onChange={(e) => {
               const f = e.target.files?.[0];
+              e.target.value = "";
               if (!f) return;
               const r = new FileReader();
+              r.onerror = () => setPhotoPerm(true);
               r.onload = () => setPhoto(String(r.result));
-              r.readAsDataURL(f);
+              try {
+                r.readAsDataURL(f);
+              } catch {
+                setPhotoPerm(true);
+              }
             }}
           />
         </div>
@@ -143,6 +164,20 @@ export default function ProfileEditPage() {
         </div>
       </div>
       <TabBar />
+      {photoPerm ? (
+        <Modal
+          title="설정에서 사진 접근을 허용해주세요"
+          cancel="돌아가기"
+          confirm="설정으로 이동"
+          onCancel={() => setPhotoPerm(false)}
+          onConfirm={() => {
+            setPhotoPerm(false);
+            setToast("브라우저 주소창 자물쇠에서 사진 권한을 허용해주세요");
+            setTimeout(() => setToast(""), 2400);
+          }}
+        />
+      ) : null}
+      {toast ? <div className="toast">{toast}</div> : null}
     </PhoneShell>
   );
 }

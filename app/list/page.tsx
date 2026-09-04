@@ -8,7 +8,8 @@ import { track } from "@/lib/format";
 
 export default function ListPage() {
   const router = useRouter();
-  const { hydrated, loggedIn, pet, visibleItems, addItem, renameItem, deleteItem } = useStore();
+  const { hydrated, loggedIn, pet, visibleItems, addItem, renameItem, deleteItem, actionBusy, runAction } =
+    useStore();
   const [menuId, setMenuId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editVal, setEditVal] = useState("");
@@ -164,10 +165,11 @@ export default function ListPage() {
         <Modal
           title="리스트를 삭제할까요?"
           confirm="삭제하기"
+          busy={actionBusy}
           onCancel={() => setDelId(null)}
-          onConfirm={() => {
-            deleteItem(delId);
-            setDelId(null);
+          onConfirm={async () => {
+            const status = await runAction(() => deleteItem(delId));
+            if (status !== "error") setDelId(null);
           }}
         />
       ) : null}

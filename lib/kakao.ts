@@ -5,7 +5,11 @@ type KakaoSDK = {
   isInitialized: () => boolean;
   init: (key: string) => void;
   Auth: {
-    login: (opts: { success: (res: unknown) => void; fail: (err: unknown) => void }) => void;
+    login: (opts: {
+      persistAccessToken?: boolean;
+      success: (res: unknown) => void;
+      fail: (err: unknown) => void;
+    }) => void;
   };
   API: {
     request: (opts: {
@@ -55,6 +59,7 @@ export async function loginWithKakao(): Promise<KakaoLoginResult> {
     if (!Kakao.isInitialized()) Kakao.init(JS_KEY);
     const id = await new Promise<string>((resolve, reject) => {
       Kakao.Auth.login({
+        persistAccessToken: true,
         success: () => {
           Kakao.API.request({
             url: "/v2/user/me",

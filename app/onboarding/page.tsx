@@ -9,7 +9,7 @@ import { track } from "@/lib/format";
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const { hydrated, loggedIn, pet, completeOnboarding } = useStore();
+  const { hydrated, loggedIn, pet, completeOnboarding, runAction } = useStore();
   const [species, setSpecies] = useState<Species | null>(null);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
@@ -23,7 +23,7 @@ export default function OnboardingPage() {
     else if (pet) router.replace("/home");
   }, [hydrated, loggedIn, pet, router]);
 
-  function submit() {
+  async function submit() {
     const next: Record<string, string> = {};
     if (!species) next.species = "종을 선택해주세요";
     const n = name.trim();
@@ -42,12 +42,15 @@ export default function OnboardingPage() {
       return;
     }
     setBusy(true);
-    completeOnboarding({
-      species: species!,
-      name: n,
-      age: age === "" ? null : Number(age),
-      journey: journey!,
-    });
+    const status = await runAction(() =>
+      completeOnboarding({
+        species: species!,
+        name: n,
+        age: age === "" ? null : Number(age),
+        journey: journey!,
+      })
+    );
+    if (status === "error") setBusy(false);
   }
 
   if (!hydrated) return <div className="shell" />;
@@ -139,7 +142,7 @@ export default function OnboardingPage() {
         </div>
 
         <button className="ob-done" type="button" onClick={submit} disabled={busy}>
-          완료하기
+          {busy ? <span className="spinner" /> : "완료하기"}
         </button>
       </div>
     </PhoneShell>
