@@ -26,6 +26,19 @@ export default function MemoryPage() {
     if (pet) track("memory_view", { card_count: visibleMemories.length, journey_type: pet.journey });
   }, [pet, visibleMemories.length]);
 
+  useEffect(() => {
+    if (!menuId && !openSort) return;
+    const close = () => {
+      setMenuId(null);
+      setOpenSort(false);
+    };
+    const t = window.setTimeout(() => document.addEventListener("pointerdown", close), 0);
+    return () => {
+      window.clearTimeout(t);
+      document.removeEventListener("pointerdown", close);
+    };
+  }, [menuId, openSort]);
+
   const cards = useMemo(() => {
     const arr = [...visibleMemories];
     arr.sort((a, b) => dateKey(a.date) - dateKey(b.date));
@@ -45,11 +58,18 @@ export default function MemoryPage() {
     <PhoneShell bg={bg}>
       <div className="mem-head">
         <h1>메모리</h1>
-        <button className="sort" type="button" onClick={() => setOpenSort((v) => !v)}>
-          {sort === "latest" ? "최신순" : "오래된순"} {openSort ? "▴" : "▾"}
-        </button>
+        {showSkeleton || cards.length > 0 ? (
+          <button
+            className="sort"
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => setOpenSort((v) => !v)}
+          >
+            {sort === "latest" ? "최신순" : "오래된순"} {openSort ? "▴" : "▾"}
+          </button>
+        ) : null}
         {openSort ? (
-          <div className="sort-menu">
+          <div className="sort-menu" onPointerDown={(e) => e.stopPropagation()}>
             <button
               type="button"
               onClick={() => {
@@ -103,7 +123,15 @@ export default function MemoryPage() {
                 <Meatball onClick={() => setMenuId((id) => (id === m.id ? null : m.id))} />
               </div>
               {menuId === m.id ? (
-                <button className="card-del" type="button" onClick={() => setDelId(m.id)}>
+                <button
+                  className="card-del"
+                  type="button"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => {
+                    setDelId(m.id);
+                    setMenuId(null);
+                  }}
+                >
                   삭제
                 </button>
               ) : null}

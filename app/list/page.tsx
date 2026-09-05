@@ -32,6 +32,16 @@ export default function ListPage() {
     if (adding) addRef.current?.focus();
   }, [adding]);
 
+  useEffect(() => {
+    if (!menuId) return;
+    const close = () => setMenuId(null);
+    const t = window.setTimeout(() => document.addEventListener("pointerdown", close), 0);
+    return () => {
+      window.clearTimeout(t);
+      document.removeEventListener("pointerdown", close);
+    };
+  }, [menuId]);
+
   if (!hydrated || !pet) return <div className="shell" />;
 
   const title = pet.journey === "before" ? "버킷 리스트" : "추억 리스트";
@@ -121,7 +131,7 @@ export default function ListPage() {
                   onClick={() => setMenuId((id) => (id === it.id ? null : it.id))}
                 />
                 {menuId === it.id ? (
-                  <div className="meat-menu">
+                  <div className="meat-menu" onPointerDown={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={() => {
@@ -148,18 +158,20 @@ export default function ListPage() {
           </div>
         )}
       </div>
-      <button
-        className="fab"
-        type="button"
-        aria-label="추가"
-        onClick={() => {
-          track("list_add_button_click", { journey_type: pet.journey });
-          setAdding(true);
-          setMenuId(null);
-        }}
-      >
-        <img src="/icons/list_add_icon.png" alt="" />
-      </button>
+      {adding ? null : (
+        <button
+          className="fab"
+          type="button"
+          aria-label="추가"
+          onClick={() => {
+            track("list_add_button_click", { journey_type: pet.journey });
+            setAdding(true);
+            setMenuId(null);
+          }}
+        >
+          <img src="/icons/list_add_icon.png" alt="" />
+        </button>
+      )}
       <TabBar />
       {delId ? (
         <Modal

@@ -308,6 +308,7 @@ function RecordInner() {
           title={"변경된 내용이 있어요.\n임시 저장할까요?"}
           cancel="나가기"
           confirm="저장하고 나가기"
+          dismissOnDim={false}
           busy={actionBusy}
           onCancel={() => router.back()}
           onConfirm={async () => {
@@ -325,6 +326,7 @@ function RecordInner() {
           title="기록을 메모리에 저장했어요!"
           cancel="리스트로 가기"
           confirm="메모리로 가기"
+          dismissOnDim={false}
           onCancel={() => {
             track("record_complete_modal_action", { next_action: "to_list" });
             router.replace("/list");
@@ -340,6 +342,7 @@ function RecordInner() {
           title="기록에 실패했어요!"
           cancel="리스트로 가기"
           confirm="다시하기"
+          dismissOnDim={false}
           onCancel={() => router.replace("/list")}
           onConfirm={() => {
             track("record_retry_click", { retry_count: 1 });

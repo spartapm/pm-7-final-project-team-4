@@ -52,7 +52,16 @@ export function TabBar() {
 
 export function Meatball({ onClick, label = "더보기" }: { onClick: () => void; label?: string }) {
   return (
-    <button className="meat" type="button" aria-label={label} onClick={onClick}>
+    <button
+      className="meat"
+      type="button"
+      aria-label={label}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+    >
       <i />
       <i />
       <i />
@@ -68,6 +77,7 @@ export function Modal({
   onCancel,
   onConfirm,
   busy,
+  dismissOnDim = true,
 }: {
   title: string;
   body?: ReactNode;
@@ -76,9 +86,10 @@ export function Modal({
   onCancel: () => void;
   onConfirm: () => void;
   busy?: boolean;
+  dismissOnDim?: boolean;
 }) {
   return (
-    <div className="dim" onClick={onCancel}>
+    <div className="dim" onClick={dismissOnDim ? onCancel : undefined}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h2>{title}</h2>
         {body ? <p>{body}</p> : null}
