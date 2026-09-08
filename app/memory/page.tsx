@@ -110,7 +110,7 @@ export default function MemoryPage() {
                 className="card-thumb"
                 onClick={() => {
                   track("memory_card_click", { item_id: m.id });
-                  router.push(`/memory/${m.id}`);
+                  router.push(`/memory/${m.id}?from=memory`);
                 }}
               >
                 {m.photos[0] ? (

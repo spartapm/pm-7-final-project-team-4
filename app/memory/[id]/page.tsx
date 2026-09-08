@@ -21,7 +21,9 @@ export default function MemoryDetailPage() {
   }, [hydrated, loggedIn, pet, router]);
 
   useEffect(() => {
-    if (mem) track("memory_detail_view", { entry_point: "memory" });
+    if (!mem) return;
+    const from = new URLSearchParams(window.location.search).get("from") === "home" ? "home" : "memory";
+    track("memory_detail_view", { entry_point: from });
   }, [mem]);
 
   if (!hydrated || !pet) return <div className="shell" />;
@@ -72,7 +74,7 @@ export default function MemoryDetailPage() {
           type="button"
           onClick={() => {
             track("memory_edit_click", { item_id: mem.id });
-            router.push(`/list/record?memoryId=${mem.id}&entry=memory`);
+            router.push(`/memory/${mem.id}/edit`);
           }}
         >
           수정

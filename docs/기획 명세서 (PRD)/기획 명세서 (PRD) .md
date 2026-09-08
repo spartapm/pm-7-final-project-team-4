@@ -428,7 +428,7 @@
 
 | 화면 ID | 이벤트명 | 트리거 시점 | 주요 파라미터 (값 형식) | 매핑 지표 |
 | --- | --- | --- | --- | --- |
-| List-02 | `record_edit_view` | 기록 수정 화면 진입 | `entry_point`(`list` / `memory`) | 보조지표 A(기록화면 진입률)의 분자 |
+| List-02 | `record_edit_view` | 기록 수정 화면 진입 | `entry_point`(`list`) | 보조지표 A(기록화면 진입률)의 분자 |
 | List-02 | `record_field_interact` | List-02 진입 후 각 필드(날짜/제목/우리의 이야기/사진)에서 최초 유효 인터랙션 발생 시 1회만 전송. 
 동일 필드 재클릭·재입력 시 재전송하지 않음 | `field_name`(`date` / `title` / `story` / `photo`) | **선행지표**: 필드별 관여도, 완료 예측 신호 |
 | List-02 | `record_photo_add` | 사진 추가 성공 | `photo_count`(정수, 1~5) | 기록 콘텐츠 풍부도(참고용) |
@@ -440,6 +440,8 @@
 | List-03-01 | `record_complete_modal_action` | 완료 모달 버튼 선택 | `next_action`(`to_list` / `to_memory`) | 완료 직후 행동 분기 분석
 (리스트 재작성 vs 회고) |
 | List-03-02 | `record_retry_click` | '다시하기' 클릭 | `retry_count`(정수) | 저장 실패 후 재시도 행동 분석 |
+| List-03-03 | `record_exit_modal_action` | '나가기' 모달 버튼 클릭 | `item_id` | 임시저장 이탈 |
+| List-03-03 | `record_complete_modal_action` | '저장하고 나가기' 모달 버튼 클릭 | `item_id` | 임시저장 후 이탈 |
 
 #### (5) 메모리
 
@@ -450,7 +452,14 @@
 | Memory-01-01 | `memory_card_click` | 메모리 카드 클릭 → Memory-02 진입 | `item_id` | 완료 기록 재조회(회고 재방문) 빈도 |
 | Memory-01-01 | `memory_card_delete` | 카드 ****삭제 성공 | `item_id` | 완료 기록 삭제 빈도(참고용) |
 | Memory-02 | `memory_detail_view` | 기록 상세 화면 진입 | `entry_point`(`home` / `memory`) | 기록 상세 조회(회고 완결 행동), 진입 경로별 비교 |
-| Memory-02 | `memory_edit_click` | 수정 버튼 클릭 → List-02 재진입 | `item_id` | 완료 기록 재편집 빈도 |
+| Memory-02 | `memory_edit_click` | 수정 버튼 클릭 → Memory-03 재진입 | `item_id` | 완료 기록 재편집 빈도 |
+| Memory-03 | `memory_edit_view` | 메모리에서 기록 수정 화면(Memory-03) 진입 | `item_id` | 재수정 화면 진입 |
+| Memory-03 | `memory_photo_add` | 사진 추가 성공 | `mem_photo_count`(정수, 1~5) | 기록 콘텐츠 풍부도(참고용) |
+| Memory-03 | `memory_photo_upload_fail` | 사진 업로드 실패 | `mem_fail_reason`(`mem_network` / `mem_size` / `mem_format`) | 사진 업로드 실패 빈도 |
+| Memory-03 | `memory_complete` | Memory-03에서 ‘완료’ 클릭 → List-03-01 표출 | `item_id` | 게시 후 수정 빈도 |
+| Memory-03 | `memory_complete_fail` | 완료 후 저장 실패 → List-03-02 표출 | `fail_reason`(`network` / `server` / `validation`) | 완료 실패 원인 진단 |
+| Memory-03-01 | `memory_exit_modal_action` | ‘나가기’ 버튼 클릭 | `item_id` | 재수정 이탈 |
+| Memory-03-01 | `memory_complete_modal_action` | ‘저장하고 나가기’ 버튼 클릭 | `item_id` | 저장 확정 빈도 |
 
 #### (6) 프로필 / 계정 관리
 

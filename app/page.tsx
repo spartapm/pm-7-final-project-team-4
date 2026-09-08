@@ -24,7 +24,7 @@ export default function LoginPage() {
   return (
     <PhoneShell bg="/bg/onboarding_bg_01.png">
       <div className="login">
-        <img className="login-logo" src="/icons/logo_text.png" alt="Pet Memory" />
+        <img className="login-logo" src="/icons/main_logo_text.png" alt="Pet Memory" />
         <button
           className="kakao-btn"
           type="button"
@@ -43,6 +43,10 @@ export default function LoginPage() {
               login();
               return;
             }
+            track("sign_up_fail", {
+              fail_reason:
+                res.reason === "cancel" ? "auth_cancel" : res.reason === "network" ? "network" : "auth_error",
+            });
             setHint("로그인에 실패했어요. 다시 시도해주세요");
           }}
         >

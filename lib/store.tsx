@@ -110,8 +110,9 @@ type Store = AppState & {
   renameItem: (id: string, title: string) => void;
   deleteItem: (id: string) => void;
   saveDraft: (id: string, draft: DraftRecord) => void;
-  completeNew: (itemId: string, rec: Omit<Memory, "id" | "itemId" | "journey" | "createdAt" | "updatedAt">) => Memory | null;
-  updateMemory: (id: string, rec: Omit<Memory, "id" | "itemId" | "journey" | "createdAt" | "updatedAt">) => void;
+  saveMemoryDraft: (id: string, draft: DraftRecord) => void;
+  completeNew: (itemId: string, rec: Omit<Memory, "id" | "itemId" | "journey" | "createdAt" | "updatedAt" | "draft">) => Memory | null;
+  updateMemory: (id: string, rec: Omit<Memory, "id" | "itemId" | "journey" | "createdAt" | "updatedAt" | "draft">) => void;
   deleteMemory: (id: string) => void;
   visibleItems: ListItem[];
   visibleMemories: Memory[];
@@ -244,8 +245,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const next = { ...prev, accountId: nextId, loggedIn: true, loginAt: Date.now() };
       stateRef.current = next;
       skipPush.current = Boolean(kakaoId);
+      const isNew = !prev.pet;
       setState(next);
-      track("sign_up", { method: "kakao" });
+      if (isNew) track("sign_up", { method: "kakao" });
       if (kakaoId) void runPull(nextId, next);
     },
     [runPull]
@@ -401,11 +403,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ...s,
       items: s.items.map((it) => (it.id === id ? { ...it, draft } : it)),
     }));
-    track("record_temp_save");
+  }, []);
+
+  const saveMemoryDraft = useCallback((id: string, draft: DraftRecord) => {
+    touch();
+    setState((s) => ({
+      ...s,
+      memories: s.memories.map((m) => (m.id === id ? { ...m, draft } : m)),
+    }));
   }, []);
 
   const completeNew = useCallback(
-    (itemId: string, rec: Omit<Memory, "id" | "itemId" | "journey" | "createdAt" | "updatedAt">) => {
+    (itemId: string, rec: Omit<Memory, "id" | "itemId" | "journey" | "createdAt" | "updatedAt" | "draft">) => {
       const now = Date.now();
       touch();
       const mem: Memory = {
@@ -437,15 +446,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const updateMemory = useCallback(
-    (id: string, rec: Omit<Memory, "id" | "itemId" | "journey" | "createdAt" | "updatedAt">) => {
+    (id: string, rec: Omit<Memory, "id" | "itemId" | "journey" | "createdAt" | "updatedAt" | "draft">) => {
       touch();
       setState((s) => ({
         ...s,
         memories: s.memories.map((m) =>
-          m.id === id ? { ...m, ...rec, updatedAt: Date.now() } : m
+          m.id === id ? { ...m, ...rec, draft: undefined, updatedAt: Date.now() } : m
         ),
       }));
-      track("record_complete", { has_photo: rec.photos.length > 0, char_count: rec.story.length });
     },
     []
   );
@@ -508,6 +516,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     renameItem,
     deleteItem,
     saveDraft,
+    saveMemoryDraft,
     completeNew,
     updateMemory,
     deleteMemory,

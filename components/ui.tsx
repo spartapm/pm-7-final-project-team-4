@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { formatDateDots } from "@/lib/format";
+import { formatDateDots, track } from "@/lib/format";
 
 export function PhoneShell({
   children,
@@ -41,7 +41,13 @@ export function TabBar() {
       {tabs.map((t) => {
         const on = path === t.href || path.startsWith(t.href + "/");
         return (
-        <Link key={t.key} href={t.href} className={on ? "on" : ""} aria-label={t.key}>
+        <Link
+            key={t.key}
+            href={t.href}
+            className={on ? "on" : ""}
+            aria-label={t.key}
+            onClick={() => track("nav_tab_click", { tab_name: t.key })}
+          >
             <img src={t.src} alt="" />
           </Link>
         );
@@ -76,6 +82,7 @@ export function Modal({
   confirm,
   onCancel,
   onConfirm,
+  onDim,
   busy,
   dismissOnDim = true,
 }: {
@@ -85,11 +92,12 @@ export function Modal({
   confirm: string;
   onCancel: () => void;
   onConfirm: () => void;
+  onDim?: () => void;
   busy?: boolean;
   dismissOnDim?: boolean;
 }) {
   return (
-    <div className="dim" onClick={dismissOnDim ? onCancel : undefined}>
+    <div className="dim" onClick={dismissOnDim ? onDim ?? onCancel : undefined}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h2>{title}</h2>
         {body ? <p>{body}</p> : null}

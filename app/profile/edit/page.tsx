@@ -91,7 +91,7 @@ export default function ProfileEditPage() {
           >
             <img
               className="face"
-              src={photo || "/icons/profile_camera_icon.png"}
+              src={photo || "/icons/camera_icon.png"}
               alt="프로필 사진"
             />
           </button>

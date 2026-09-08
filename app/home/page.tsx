@@ -47,10 +47,10 @@ export default function HomePage() {
                   className={`node ${SLOT_CLASS[i]}`}
                   onClick={() => {
                     track("home_node_click", { node_index: i + 1, item_id: mem.id });
-                    router.push(`/memory/${mem.id}`);
+                    router.push(`/memory/${mem.id}?from=home`);
                   }}
                 >
-                  <img src={src} alt="" />
+                  <img className={mem.photos[0] ? "" : "paw"} src={src} alt="" />
                 </button>
               );
             })}

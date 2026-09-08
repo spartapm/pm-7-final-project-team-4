@@ -50,7 +50,7 @@ function loadSdk(): Promise<KakaoSDK> {
 
 export type KakaoLoginResult =
   | { ok: true; kakaoId: string }
-  | { ok: false; reason: "cancel" | "fail" | "skip" };
+  | { ok: false; reason: "cancel" | "fail" | "network" | "skip" };
 
 export async function loginWithKakao(): Promise<KakaoLoginResult> {
   if (!JS_KEY) return { ok: false, reason: "skip" };
@@ -71,7 +71,16 @@ export async function loginWithKakao(): Promise<KakaoLoginResult> {
       });
     });
     return { ok: true, kakaoId: id };
-  } catch {
+  } catch (err) {
+    const msg = String(
+      err && typeof err === "object" && "error" in err
+        ? (err as { error?: string }).error
+        : err
+    );
+    if (/cancel|access_denied|closed/i.test(msg)) return { ok: false, reason: "cancel" };
+    if (/SDK load|Failed to fetch|network|NetworkError|TypeError/i.test(msg)) {
+      return { ok: false, reason: "network" };
+    }
     return { ok: false, reason: "fail" };
   }
 }

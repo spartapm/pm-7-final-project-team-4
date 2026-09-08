@@ -35,6 +35,7 @@ export type Memory = {
   photos: string[];
   createdAt: number;
   updatedAt: number;
+  draft?: DraftRecord;
 };
 
 export type AppState = {
