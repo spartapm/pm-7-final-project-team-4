@@ -17,6 +17,7 @@ export default function ListPage() {
   const [addVal, setAddVal] = useState("");
   const [delId, setDelId] = useState<string | null>(null);
   const addRef = useRef<HTMLInputElement>(null);
+  const blockRowClick = useRef(false);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -102,7 +103,10 @@ export default function ListPage() {
               </div>
             ) : null}
             {visibleItems.map((it) => (
-              <div key={it.id} className="list-row">
+              <div
+                key={it.id}
+                className={`list-row${menuId === it.id ? " menu-open" : ""}`}
+              >
                 {editingId === it.id ? (
                   <input
                     className="rename"
@@ -110,7 +114,7 @@ export default function ListPage() {
                     maxLength={50}
                     autoFocus
                     onChange={(e) => setEditVal(e.target.value.slice(0, 50))}
-                    onBlur={commitRename}
+                    onBlur={() => window.setTimeout(commitRename, 0)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") commitRename();
                     }}
@@ -120,6 +124,11 @@ export default function ListPage() {
                     className="main"
                     type="button"
                     onClick={() => {
+                      if (blockRowClick.current || menuId || editingId) {
+                        blockRowClick.current = false;
+                        setMenuId(null);
+                        return;
+                      }
                       track("list_item_row_click", { item_id: it.id });
                       router.push(`/list/record?itemId=${it.id}&entry=list`);
                     }}
@@ -128,13 +137,22 @@ export default function ListPage() {
                   </button>
                 )}
                 <Meatball
-                  onClick={() => setMenuId((id) => (id === it.id ? null : it.id))}
+                  onClick={() => {
+                    setEditingId(null);
+                    setMenuId((id) => (id === it.id ? null : it.id));
+                  }}
                 />
                 {menuId === it.id ? (
                   <div className="meat-menu" onPointerDown={(e) => e.stopPropagation()}>
                     <button
                       type="button"
-                      onClick={() => {
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        blockRowClick.current = true;
+                        window.setTimeout(() => {
+                          blockRowClick.current = false;
+                        }, 300);
                         setMenuId(null);
                         setEditingId(it.id);
                         setEditVal(it.title);
@@ -144,7 +162,13 @@ export default function ListPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        blockRowClick.current = true;
+                        window.setTimeout(() => {
+                          blockRowClick.current = false;
+                        }, 300);
                         setMenuId(null);
                         setDelId(it.id);
                       }}

@@ -89,12 +89,22 @@ export default function ProfileEditPage() {
               }
             }}
           >
-            <img
-              className="face"
-              src={photo || "/icons/camera_icon.png"}
-              alt="프로필 사진"
-            />
+            <span className={`face-wrap${photo ? " has-photo" : ""}`}>
+              <img
+                className="face"
+                src={photo || "/icons/camera_icon.png"}
+                alt="프로필 사진"
+              />
+            </span>
+            {photo ? (
+              <img className="cam-overlay" src="/icons/camera_icon.png" alt="" />
+            ) : null}
           </button>
+          {photo ? (
+            <button type="button" className="reset-photo" onClick={() => setPhoto("")}>
+              기본 프로필로 변경
+            </button>
+          ) : null}
           <input
             ref={fileRef}
             className="hidden-file"
@@ -124,21 +134,38 @@ export default function ProfileEditPage() {
           className={`ob-input ${errors.name ? "err" : ""}`}
           value={name}
           maxLength={10}
-          onChange={(e) => setName(e.target.value.replace(/\s/g, "").slice(0, 10))}
+          onChange={(e) => {
+            const v = e.target.value.replace(/\s/g, "").slice(0, 10);
+            setName(v);
+            if (v && NAME_RE.test(v)) setErrors((err) => ({ ...err, name: "" }));
+          }}
         />
 
-        <div className="ob-label-row">
-          <div className="ob-label">나이 (선택)</div>
+        <div className="ob-label-row age-head">
+          <div className="ob-label">
+            나이 <span className="opt">(선택)</span>
+          </div>
           {errors.age ? <div className="field-err">{errors.age}</div> : null}
-        </div>
-        <div className="age-row">
-          <input
-            inputMode="numeric"
-            value={age}
-            maxLength={2}
-            onChange={(e) => setAge(e.target.value.replace(/\D/g, "").slice(0, 2))}
-          />
-          <span className="unit">살</span>
+          <div className="age-row">
+            <input
+              inputMode="numeric"
+              value={age}
+              maxLength={2}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+                setAge(v);
+                if (v === "") {
+                  setErrors((err) => ({ ...err, age: "" }));
+                  return;
+                }
+                const a = Number(v);
+                if (Number.isInteger(a) && a >= 0 && a <= 99) {
+                  setErrors((err) => ({ ...err, age: "" }));
+                }
+              }}
+            />
+            <span className="unit">살</span>
+          </div>
         </div>
 
         <div className="ob-label">종류*</div>

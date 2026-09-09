@@ -68,6 +68,8 @@ export function RecordEditor({
   const [interacted, setInteracted] = useState<Record<string, boolean>>({});
   const [photoPerm, setPhotoPerm] = useState(false);
   const [inlineErr, setInlineErr] = useState("");
+  const [titleErr, setTitleErr] = useState("");
+  const [storyErr, setStoryErr] = useState("");
   const [retryCount, setRetryCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const storyRef = useRef<HTMLTextAreaElement>(null);
@@ -164,7 +166,7 @@ export function RecordEditor({
         } else {
           track("record_photo_upload_fail", { fail_reason: kind });
         }
-        setToast("사진을 불러오지 못했어요");
+        setToast("사진 업로드에 실패했어요!");
         setTimeout(() => setToast(""), 1600);
       }
     }
@@ -202,8 +204,11 @@ export function RecordEditor({
 
   async function doComplete() {
     if (parkIfExpired()) return;
-    if (!title.trim() || !story.trim()) {
-      setFail(true);
+    const nextTitle = title.trim() ? "" : "제목을 입력해주세요.";
+    const nextStory = story.trim() ? "" : "이야기를 입력해주세요.";
+    setTitleErr(nextTitle);
+    setStoryErr(nextStory);
+    if (nextTitle || nextStory) {
       if (isMemory) track("memory_complete_fail", { fail_reason: "validation" });
       else track("record_complete_fail", { fail_reason: "validation" });
       return;
@@ -267,33 +272,49 @@ export function RecordEditor({
               setCal(true);
             }}
           />
-          <label className="lbl">제목</label>
+          <div className="lbl-row">
+            <label className="lbl">제목</label>
+            {titleErr ? <span className="field-err">{titleErr}</span> : null}
+          </div>
           <input
             type="text"
             value={title}
             maxLength={50}
-            placeholder={isMemory ? "제목을 입력해주세요" : "(리스트 제목 - 수정 가능)"}
+            placeholder="제목을 입력해주세요."
             onChange={(e) => {
               mark("title");
               setInlineErr("");
+              setTitleErr("");
               setTitle(e.target.value.slice(0, 50));
             }}
           />
-          <label className="lbl">우리의 이야기</label>
+          <div className="lbl-row">
+            <label className="lbl">우리의 이야기</label>
+            {storyErr ? <span className="field-err">{storyErr}</span> : null}
+          </div>
           <textarea
             ref={storyRef}
             value={story}
             maxLength={1000}
-            placeholder={isMemory ? "소중한 순간들을 기록해보세요." : "소중한 순간들을 기록해보세요. (200자 내)"}
+            placeholder={isMemory ? "최대 1000자 입력 가능" : "소중한 순간들을 기록해보세요. (1,000자 내)"}
             onChange={(e) => {
               mark("story");
               setInlineErr("");
+              setStoryErr("");
               setStory(e.target.value.slice(0, 1000));
             }}
           />
           {inlineErr ? <p className="field-err">{inlineErr}</p> : null}
           <label className="lbl">사진 추가</label>
           <div className="photos">
+            {photos.map((src, i) => (
+              <div key={i} className="photo-slot">
+                <img src={src} alt="" />
+                <button className="x" type="button" onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}>
+                  ×
+                </button>
+              </div>
+            ))}
             {photos.length < 5 ? (
               <button
                 className="photo-add"
@@ -310,14 +331,6 @@ export function RecordEditor({
                 +
               </button>
             ) : null}
-            {photos.map((src, i) => (
-              <div key={i} className="photo-slot">
-                <img src={src} alt="" />
-                <button className="x" type="button" onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))}>
-                  ×
-                </button>
-              </div>
-            ))}
           </div>
           <input
             ref={fileRef}
@@ -353,6 +366,7 @@ export function RecordEditor({
           cancel="나가기"
           confirm="저장하고 나가기"
           busy={actionBusy}
+          dismissOnDim={!isMemory}
           onDim={() => setLeave(false)}
           onCancel={() => {
             if (isMemory) track("memory_exit_modal_action", { item_id: trackId });
@@ -393,12 +407,13 @@ export function RecordEditor({
       {saved ? (
         <Modal
           title="기록을 메모리에 저장했어요!"
-          cancel="리스트로 가기"
+          cancel="뒤로가기"
           confirm="메모리로 가기"
           dismissOnDim={false}
           onCancel={() => {
             track("record_complete_modal_action", { next_action: "to_list" });
-            router.replace("/list");
+            if (isMemory && memory) router.replace(`/memory/${memory.id}`);
+            else router.replace("/list");
           }}
           onConfirm={() => {
             track("record_complete_modal_action", { next_action: "to_memory" });
@@ -409,10 +424,10 @@ export function RecordEditor({
       {fail ? (
         <Modal
           title="기록에 실패했어요!"
-          cancel="리스트로 가기"
+          cancel={null}
           confirm="다시하기"
           onDim={() => setFail(false)}
-          onCancel={() => router.replace("/list")}
+          onCancel={() => setFail(false)}
           onConfirm={() => {
             const next = retryCount + 1;
             setRetryCount(next);

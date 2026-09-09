@@ -58,7 +58,7 @@ export default function MemoryPage() {
     <PhoneShell bg={bg}>
       <div className="mem-head">
         <h1>메모리</h1>
-        {showSkeleton || cards.length > 0 ? (
+        {showSkeleton || cards.length > 1 ? (
           <button
             className="sort"
             type="button"
@@ -104,11 +104,15 @@ export default function MemoryPage() {
       ) : (
         <div className="scroll grid">
           {cards.map((m) => (
-            <div key={m.id} className="card">
+            <div key={m.id} className={`card${menuId === m.id ? " menu-open" : ""}`}>
               <button
                 type="button"
                 className="card-thumb"
                 onClick={() => {
+                  if (menuId) {
+                    setMenuId(null);
+                    return;
+                  }
                   track("memory_card_click", { item_id: m.id });
                   router.push(`/memory/${m.id}?from=memory`);
                 }}
@@ -127,7 +131,8 @@ export default function MemoryPage() {
                   className="card-del"
                   type="button"
                   onPointerDown={(e) => e.stopPropagation()}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setDelId(m.id);
                     setMenuId(null);
                   }}
@@ -138,7 +143,13 @@ export default function MemoryPage() {
               <button
                 type="button"
                 className="card-body"
-                onClick={() => router.push(`/memory/${m.id}`)}
+                onClick={() => {
+                  if (menuId) {
+                    setMenuId(null);
+                    return;
+                  }
+                  router.push(`/memory/${m.id}?from=memory`);
+                }}
               >
                 <p className="t">{m.title}</p>
                 <p className="d">{m.date}</p>

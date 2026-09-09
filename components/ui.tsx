@@ -88,7 +88,7 @@ export function Modal({
 }: {
   title: string;
   body?: ReactNode;
-  cancel?: string;
+  cancel?: string | null;
   confirm: string;
   onCancel: () => void;
   onConfirm: () => void;
@@ -102,9 +102,11 @@ export function Modal({
         <h2>{title}</h2>
         {body ? <p>{body}</p> : null}
         <div className="modal-btns">
-          <button className="btn-ghost" type="button" onClick={onCancel} disabled={busy}>
-            {cancel}
-          </button>
+          {cancel != null ? (
+            <button className="btn-ghost" type="button" onClick={onCancel} disabled={busy}>
+              {cancel}
+            </button>
+          ) : null}
           <button className="btn-fill" type="button" onClick={onConfirm} disabled={busy}>
             {busy ? <span className="spinner" /> : confirm}
           </button>

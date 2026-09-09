@@ -71,6 +71,7 @@ export default function OnboardingPage() {
             className={`species-card ${species === "dog" ? "on" : ""} ${errors.species ? "err" : ""}`}
             onClick={() => {
               setSpecies("dog");
+              setErrors((e) => ({ ...e, species: "" }));
               track("onboarding_pet_type_select", { pet_type: "dog" });
             }}
           >
@@ -84,6 +85,7 @@ export default function OnboardingPage() {
             className={`species-card ${species === "cat" ? "on" : ""} ${errors.species ? "err" : ""}`}
             onClick={() => {
               setSpecies("cat");
+              setErrors((e) => ({ ...e, species: "" }));
               track("onboarding_pet_type_select", { pet_type: "cat" });
             }}
           >
@@ -103,21 +105,38 @@ export default function OnboardingPage() {
           placeholder="아이의 이름을 적어주세요. (10자 이내, 특수문자/공백 제외)"
           value={name}
           maxLength={10}
-          onChange={(e) => setName(e.target.value.replace(/\s/g, "").slice(0, 10))}
+          onChange={(e) => {
+            const v = e.target.value.replace(/\s/g, "").slice(0, 10);
+            setName(v);
+            if (v && NAME_RE.test(v)) setErrors((err) => ({ ...err, name: "" }));
+          }}
         />
 
-        <div className="ob-label-row">
-          <div className="ob-label">나이 (선택)</div>
+        <div className="ob-label-row age-head">
+          <div className="ob-label">
+            나이 <span className="opt">(선택)</span>
+          </div>
           {errors.age ? <div className="field-err">{errors.age}</div> : null}
-        </div>
-        <div className="age-row">
-          <input
-            inputMode="numeric"
-            value={age}
-            maxLength={2}
-            onChange={(e) => setAge(e.target.value.replace(/\D/g, "").slice(0, 2))}
-          />
-          <span className="unit">살</span>
+          <div className="age-row">
+            <input
+              inputMode="numeric"
+              value={age}
+              maxLength={2}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "").slice(0, 2);
+                setAge(v);
+                if (v === "") {
+                  setErrors((err) => ({ ...err, age: "" }));
+                  return;
+                }
+                const a = Number(v);
+                if (Number.isInteger(a) && a >= 0 && a <= 99) {
+                  setErrors((err) => ({ ...err, age: "" }));
+                }
+              }}
+            />
+            <span className="unit">살</span>
+          </div>
         </div>
 
         <div className="ob-label-row">
@@ -128,14 +147,20 @@ export default function OnboardingPage() {
           <button
             type="button"
             className={`${journey === "before" ? "on" : ""} ${errors.journey ? "err" : ""}`}
-            onClick={() => setJourney("before")}
+            onClick={() => {
+              setJourney("before");
+              setErrors((e) => ({ ...e, journey: "" }));
+            }}
           >
             아이와 함께하고 있어요.
           </button>
           <button
             type="button"
             className={`${journey === "after" ? "on" : ""} ${errors.journey ? "err" : ""}`}
-            onClick={() => setJourney("after")}
+            onClick={() => {
+              setJourney("after");
+              setErrors((e) => ({ ...e, journey: "" }));
+            }}
           >
             아이를 추억하고 있어요.
           </button>

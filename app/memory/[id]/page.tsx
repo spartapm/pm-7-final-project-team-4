@@ -96,10 +96,11 @@ export default function MemoryDetailPage() {
             {photos.map((src, i) => (
               <div key={i} className="slide">
                 <img className="full" src={src} alt="" />
-                <div className="slide-badge">등록한 사진</div>
-                <div className="slide-idx">
-                  {i + 1}/{photos.length}
-                </div>
+                {photos.length > 1 ? (
+                  <div className="slide-idx">
+                    {i + 1}/{photos.length}
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
