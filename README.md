@@ -18,7 +18,7 @@ npm run dev
 ## 데이터
 
 - 로그인·반려동물·리스트·기록은 이 브라우저 `localStorage`에 캐시되고, Supabase `accounts` / `pets` / `list_items` / `memories`에 동기화됩니다.
-- 카카오 로그인: `.env.local`에 `NEXT_PUBLIC_KAKAO_JS_KEY`가 있으면 Kakao JS SDK로 인증하고 `kakao_{id}` 계정으로 동기화합니다. 키가 없으면 버튼만 동작하는 데모 로그인입니다.
+- 카카오 로그인: Kakao JS SDK로 인증하고 `kakao_{id}` 계정으로 동기화합니다. `NEXT_PUBLIC_KAKAO_JS_KEY`가 있으면 그 값을 쓰고, 없으면 앱에 넣어 둔 팀 JavaScript 키를 씁니다.
 - 세션은 30일입니다. 로그아웃 시 임시저장만 지웁니다. 기록 작성 중 세션이 만료되면 임시저장한 뒤 로그인 화면으로 보내고, 재로그인 후 복원합니다.
 - 회원 탈퇴 시 로컬과 Supabase 계정 데이터를 함께 삭제합니다.
 
