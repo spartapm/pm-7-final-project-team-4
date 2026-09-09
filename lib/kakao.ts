@@ -5,18 +5,7 @@ type KakaoSDK = {
   isInitialized: () => boolean;
   init: (key: string) => void;
   Auth: {
-    login: (opts: {
-      persistAccessToken?: boolean;
-      success: (res: unknown) => void;
-      fail: (err: unknown) => void;
-    }) => void;
-  };
-  API: {
-    request: (opts: {
-      url: string;
-      success: (res: { id: number }) => void;
-      fail: (err: unknown) => void;
-    }) => void;
+    authorize: (opts: { redirectUri: string }) => void;
   };
 };
 
@@ -26,6 +15,10 @@ function getKakao(): KakaoSDK | undefined {
 
 export function hasKakaoKey() {
   return Boolean(JS_KEY);
+}
+
+export function kakaoRedirectUri() {
+  return `${window.location.origin}/auth/kakao`;
 }
 
 function loadSdk(): Promise<KakaoSDK> {
@@ -48,37 +41,20 @@ function loadSdk(): Promise<KakaoSDK> {
   });
 }
 
-export type KakaoLoginResult =
-  | { ok: true; kakaoId: string }
+export type KakaoStartResult =
+  | { ok: true }
   | { ok: false; reason: "cancel" | "fail" | "network" | "skip" };
 
-export async function loginWithKakao(): Promise<KakaoLoginResult> {
+export async function startKakaoLogin(): Promise<KakaoStartResult> {
   if (!JS_KEY) return { ok: false, reason: "skip" };
   try {
     const Kakao = await loadSdk();
     if (!Kakao.isInitialized()) Kakao.init(JS_KEY);
-    const id = await new Promise<string>((resolve, reject) => {
-      Kakao.Auth.login({
-        persistAccessToken: true,
-        success: () => {
-          Kakao.API.request({
-            url: "/v2/user/me",
-            success: (res) => resolve(String(res.id)),
-            fail: reject,
-          });
-        },
-        fail: reject,
-      });
-    });
-    return { ok: true, kakaoId: id };
+    Kakao.Auth.authorize({ redirectUri: kakaoRedirectUri() });
+    return { ok: true };
   } catch (err) {
-    const msg = String(
-      err && typeof err === "object" && "error" in err
-        ? (err as { error?: string }).error
-        : err
-    );
-    if (/cancel|access_denied|closed/i.test(msg)) return { ok: false, reason: "cancel" };
-    if (/SDK load|Failed to fetch|network|NetworkError|TypeError/i.test(msg)) {
+    const msg = String(err);
+    if (/SDK load|Failed to fetch|network|NetworkError/i.test(msg)) {
       return { ok: false, reason: "network" };
     }
     return { ok: false, reason: "fail" };

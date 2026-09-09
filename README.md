@@ -18,7 +18,12 @@ npm run dev
 ## 데이터
 
 - 로그인·반려동물·리스트·기록은 이 브라우저 `localStorage`에 캐시되고, Supabase `accounts` / `pets` / `list_items` / `memories`에 동기화됩니다.
-- 카카오 로그인: Kakao JS SDK로 인증하고 `kakao_{id}` 계정으로 동기화합니다. `NEXT_PUBLIC_KAKAO_JS_KEY`가 있으면 그 값을 쓰고, 없으면 앱에 넣어 둔 팀 JavaScript 키를 씁니다.
+- 카카오 로그인: `Kakao.Auth.authorize()`로 인가 코드를 받은 뒤 서버에서 토큰을 교환하고 `kakao_{id}` 계정으로 동기화합니다.
+- 카카오 콘솔에 **사이트 도메인**과 **Redirect URI**를 둘 다 넣어야 합니다.
+  - 사이트 도메인: `https://pet-memory.vercel.app`
+  - Redirect URI: `https://pet-memory.vercel.app/auth/kakao`
+  - 로컬: `http://localhost:3000`, `http://localhost:3000/auth/kakao`
+- 토큰 교환에는 REST API 키가 필요합니다. `KAKAO_REST_API_KEY`가 없으면 JavaScript 키로 시도합니다.
 - 세션은 30일입니다. 로그아웃 시 임시저장만 지웁니다. 기록 작성 중 세션이 만료되면 임시저장한 뒤 로그인 화면으로 보내고, 재로그인 후 복원합니다.
 - 회원 탈퇴 시 로컬과 Supabase 계정 데이터를 함께 삭제합니다.
 

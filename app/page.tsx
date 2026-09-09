@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, KakaoIcon } from "@/components/ui";
-import { loginWithKakao } from "@/lib/kakao";
+import { startKakaoLogin } from "@/lib/kakao";
 import { track } from "@/lib/format";
 
 export default function LoginPage() {
@@ -12,6 +12,13 @@ export default function LoginPage() {
   const { hydrated, loggedIn, pet, login } = useStore();
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState("");
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const q = new URLSearchParams(window.location.search).get("kakao");
+    if (q === "fail") setHint("로그인에 실패했어요. 다시 시도해주세요");
+    if (q === "cancel") setHint("로그인을 취소했어요. 다시 시도해주세요");
+  }, [hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -33,12 +40,9 @@ export default function LoginPage() {
             track("sign_up_start");
             setHint("");
             setBusy(true);
-            const res = await loginWithKakao();
+            const res = await startKakaoLogin();
+            if (res.ok) return;
             setBusy(false);
-            if (res.ok) {
-              login(res.kakaoId);
-              return;
-            }
             if (res.reason === "skip") {
               login();
               return;
