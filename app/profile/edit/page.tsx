@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { PhoneShell, TabBar, Modal } from "@/components/ui";
+import { PhoneShell, Modal } from "@/components/ui";
 import { NAME_RE, type Species } from "@/lib/types";
 import { track } from "@/lib/format";
 
@@ -92,7 +92,7 @@ export default function ProfileEditPage() {
             <span className={`face-wrap${photo ? " has-photo" : ""}`}>
               <img
                 className="face"
-                src={photo || "/icons/camera_icon.png"}
+                src={photo || "/icons/profile_camera_icon.png"}
                 alt="프로필 사진"
               />
             </span>
@@ -145,7 +145,6 @@ export default function ProfileEditPage() {
           <div className="ob-label">
             나이 <span className="opt">(선택)</span>
           </div>
-          {errors.age ? <div className="field-err">{errors.age}</div> : null}
           <div className="age-row">
             <input
               inputMode="numeric"
@@ -166,6 +165,7 @@ export default function ProfileEditPage() {
             />
             <span className="unit">살</span>
           </div>
+          {errors.age ? <div className="field-err">{errors.age}</div> : null}
         </div>
 
         <div className="ob-label">종류*</div>
@@ -190,7 +190,6 @@ export default function ProfileEditPage() {
           ) : null}
         </div>
       </div>
-      <TabBar />
       {photoPerm ? (
         <Modal
           title="설정에서 사진 접근을 허용해주세요"

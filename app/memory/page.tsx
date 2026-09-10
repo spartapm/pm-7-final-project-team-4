@@ -41,7 +41,11 @@ export default function MemoryPage() {
 
   const cards = useMemo(() => {
     const arr = [...visibleMemories];
-    arr.sort((a, b) => dateKey(a.date) - dateKey(b.date));
+    arr.sort((a, b) => {
+      const byDate = dateKey(a.date) - dateKey(b.date);
+      if (byDate !== 0) return byDate;
+      return a.createdAt - b.createdAt;
+    });
     if (sort === "latest") arr.reverse();
     return arr;
   }, [visibleMemories, sort]);
@@ -58,7 +62,7 @@ export default function MemoryPage() {
     <PhoneShell bg={bg}>
       <div className="mem-head">
         <h1>메모리</h1>
-        {showSkeleton || cards.length > 1 ? (
+        {!showSkeleton && cards.length > 1 ? (
           <button
             className="sort"
             type="button"
@@ -72,7 +76,9 @@ export default function MemoryPage() {
           <div className="sort-menu" onPointerDown={(e) => e.stopPropagation()}>
             <button
               type="button"
-              onClick={() => {
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 setSort("latest");
                 setOpenSort(false);
                 track("memory_sort_change", { sort_type: "latest" });
@@ -82,7 +88,9 @@ export default function MemoryPage() {
             </button>
             <button
               type="button"
-              onClick={() => {
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 setSort("oldest");
                 setOpenSort(false);
                 track("memory_sort_change", { sort_type: "oldest" });
@@ -169,11 +177,10 @@ export default function MemoryPage() {
             setMenuId(null);
           }}
           onConfirm={async () => {
-            const status = await runAction(() => deleteMemory(delId));
-            if (status !== "error") {
-              setDelId(null);
-              setMenuId(null);
-            }
+            const id = delId;
+            setDelId(null);
+            setMenuId(null);
+            await runAction(() => deleteMemory(id));
           }}
         />
       ) : null}

@@ -12,6 +12,7 @@ export default function ProfilePage() {
   const { hydrated, loggedIn, pet, switchJourney, logout, withdraw, actionBusy, runAction } = useStore();
   const [modal, setModal] = useState<"mode" | "logout" | "leave" | null>(null);
   const [busy, setBusy] = useState(false);
+  const [holdJourney, setHoldJourney] = useState<Journey | null>(null);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -25,7 +26,7 @@ export default function ProfilePage() {
 
   if (!hydrated || !pet) return <div className="shell" />;
 
-  const target: Journey = pet.journey === "before" ? "after" : "before";
+  const shownJourney = holdJourney ?? pet.journey;
   const ageText = pet.age == null ? "" : `${pet.age}살`;
   const sub = ageText ? `${SPECIES_KO[pet.species]} / ${ageText}` : SPECIES_KO[pet.species];
 
@@ -37,17 +38,15 @@ export default function ProfilePage() {
           <button className="edit" type="button" onClick={() => router.push("/profile/edit")}>
             <img src="/icons/profile_modify_icon.png" alt="수정" />
           </button>
-          <div className={`avatar${pet.journey === "after" ? " after" : ""}`}>
-            {pet.journey === "after" && !pet.photo ? (
-              <img className="wings-solo" src="/icons/profile_wings.png" alt="" />
-            ) : (
-              <>
-                {pet.journey === "after" ? (
-                  <img className="wings" src="/icons/profile_wings.png" alt="" />
-                ) : null}
-                <img className="face" src={pet.photo || "/icons/profile_default.png"} alt="" />
-              </>
-            )}
+          <div className={`avatar${shownJourney === "after" ? " after" : ""}`}>
+            {shownJourney === "after" ? (
+              <img className="wings" src="/icons/profile_wings.png" alt="" />
+            ) : null}
+            <img
+              className={`face${pet.photo ? " photo" : ""}`}
+              src={pet.photo || "/icons/profile_default.png"}
+              alt=""
+            />
           </div>
           <div className="p-meta">
             <p className={`name ${pet.name.length >= 7 ? "long" : ""}`}>{pet.name} 보호자</p>
@@ -58,18 +57,26 @@ export default function ProfilePage() {
         <div className="seg">
           <button
             type="button"
-            className={pet.journey === "before" ? "on" : ""}
+            className={shownJourney === "before" ? "on" : ""}
+            disabled={busy || actionBusy}
             onClick={() => {
-              if (pet.journey !== "before") setModal("mode");
+              if (shownJourney !== "before") {
+                setHoldJourney(pet.journey);
+                setModal("mode");
+              }
             }}
           >
             아이와 함께한 날
           </button>
           <button
             type="button"
-            className={pet.journey === "after" ? "on" : ""}
+            className={shownJourney === "after" ? "on" : ""}
+            disabled={busy || actionBusy}
             onClick={() => {
-              if (pet.journey !== "after") setModal("mode");
+              if (shownJourney !== "after") {
+                setHoldJourney(pet.journey);
+                setModal("mode");
+              }
             }}
           >
             아이를 추억한 날
@@ -87,7 +94,7 @@ export default function ProfilePage() {
       </div>
       <TabBar />
 
-      {modal === "mode" && pet.journey === "before" ? (
+      {modal === "mode" && shownJourney === "before" ? (
         <Modal
           title="아이를 추억한 날로 변경할까요?"
           body={
@@ -100,18 +107,22 @@ export default function ProfilePage() {
           confirm="변경하기"
           busy={actionBusy}
           onCancel={() => {
+            if (actionBusy) return;
             track("journey_switch_cancel");
             setModal(null);
+            setHoldJourney(null);
           }}
           onConfirm={async () => {
-            const status = await runAction(() => switchJourney(target));
+            const status = await runAction(() => switchJourney("after"));
             track("journey_switch_confirm", { from_type: "before", to_type: "after" });
-            if (status !== "error") setModal(null);
+            if (status === "error") return;
+            setModal(null);
+            setHoldJourney(null);
           }}
         />
       ) : null}
 
-      {modal === "mode" && pet.journey === "after" ? (
+      {modal === "mode" && shownJourney === "after" ? (
         <Modal
           title="아이와 함께한 날로 변경할까요?"
           body={
@@ -125,13 +136,17 @@ export default function ProfilePage() {
           confirm="변경하기"
           busy={actionBusy}
           onCancel={() => {
+            if (actionBusy) return;
             track("journey_switch_cancel");
             setModal(null);
+            setHoldJourney(null);
           }}
           onConfirm={async () => {
-            const status = await runAction(() => switchJourney(target));
+            const status = await runAction(() => switchJourney("before"));
             track("journey_switch_confirm", { from_type: "after", to_type: "before" });
-            if (status !== "error") setModal(null);
+            if (status === "error") return;
+            setModal(null);
+            setHoldJourney(null);
           }}
         />
       ) : null}

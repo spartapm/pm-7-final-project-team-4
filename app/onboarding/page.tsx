@@ -116,7 +116,6 @@ export default function OnboardingPage() {
           <div className="ob-label">
             나이 <span className="opt">(선택)</span>
           </div>
-          {errors.age ? <div className="field-err">{errors.age}</div> : null}
           <div className="age-row">
             <input
               inputMode="numeric"
@@ -137,6 +136,7 @@ export default function OnboardingPage() {
             />
             <span className="unit">살</span>
           </div>
+          {errors.age ? <div className="field-err">{errors.age}</div> : null}
         </div>
 
         <div className="ob-label-row">

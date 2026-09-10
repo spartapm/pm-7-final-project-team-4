@@ -5,17 +5,31 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { formatDateDots, track } from "@/lib/format";
 
+export function AppFrame({ children }: { children: ReactNode }) {
+  return (
+    <div className="viewport">
+      <div className="web-bg" aria-hidden />
+      <div className="phone">{children}</div>
+    </div>
+  );
+}
+
 export function PhoneShell({
   children,
   bg,
   cream,
+  className,
 }: {
   children: ReactNode;
   bg?: string;
   cream?: boolean;
+  className?: string;
 }) {
   return (
-    <div className="shell" style={cream ? { background: "var(--cream)" } : undefined}>
+    <div
+      className={`shell${className ? ` ${className}` : ""}`}
+      style={cream ? { background: "var(--cream)" } : undefined}
+    >
       {bg ? <div className="shell-bg" style={{ backgroundImage: `url(${bg})` }} /> : null}
       <div className="shell-body">{children}</div>
     </div>

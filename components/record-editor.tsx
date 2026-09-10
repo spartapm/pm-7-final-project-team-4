@@ -73,6 +73,9 @@ export function RecordEditor({
   const [retryCount, setRetryCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const storyRef = useRef<HTMLTextAreaElement>(null);
+  const hadRecord = useRef(Boolean(item || memory));
+  const freezeForm = useRef(false);
+  if (item || memory) hadRecord.current = true;
 
   useEffect(() => {
     if (!hydrated) return;
@@ -86,11 +89,13 @@ export function RecordEditor({
   }, [isMemory, memory]);
 
   useEffect(() => {
+    if (freezeForm.current) return;
+    if (!item && !memory && hadRecord.current) return;
     setTitle(initial.title);
     setStory(initial.story);
     setDate(initial.date);
     setPhotos(initial.photos);
-  }, [initial]);
+  }, [initial, item, memory]);
 
   useEffect(() => {
     const el = storyRef.current;
@@ -213,6 +218,7 @@ export function RecordEditor({
       else track("record_complete_fail", { fail_reason: "validation" });
       return;
     }
+    freezeForm.current = true;
     setBusy(true);
     const status = await runAction(() => {
       if (isMemory && memory) {
@@ -222,6 +228,7 @@ export function RecordEditor({
       }
     });
     setBusy(false);
+    if (status === "error") freezeForm.current = false;
     if (status === "error") {
       setFail(true);
       if (isMemory) track("memory_complete_fail", { fail_reason: "server" });
@@ -233,7 +240,7 @@ export function RecordEditor({
   }
 
   if (!hydrated || !pet) return <div className="shell" />;
-  if (!item && !memory && !saved && !fail) {
+  if (!hadRecord.current && !item && !memory && !saved && !fail && !busy) {
     return (
       <PhoneShell cream>
         <div className="topbar">
@@ -377,8 +384,11 @@ export function RecordEditor({
             if (parkIfExpired()) return;
             if (isMemory && memory) {
               track("memory_complete_modal_action", { item_id: memory.id });
-              if (!title.trim() || !story.trim()) {
-                setInlineErr("제목과 이야기를 작성해주세요");
+              const nextTitle = title.trim() ? "" : "제목을 입력해주세요.";
+              const nextStory = story.trim() ? "" : "이야기를 입력해주세요.";
+              if (nextTitle || nextStory) {
+                setTitleErr(nextTitle);
+                setStoryErr(nextStory);
                 setLeave(false);
                 return;
               }

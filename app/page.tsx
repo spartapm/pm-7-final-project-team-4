@@ -12,6 +12,11 @@ export default function LoginPage() {
   const { hydrated, loggedIn, pet, login } = useStore();
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState("");
+  const [localDev, setLocalDev] = useState(false);
+
+  useEffect(() => {
+    setLocalDev(window.location.hostname === "localhost");
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -58,6 +63,16 @@ export default function LoginPage() {
           {busy ? "로그인 중..." : "카카오톡으로 시작하기"}
         </button>
         {hint ? <p className="login-hint">{hint}</p> : null}
+        {localDev ? (
+          <button
+            className="login-hint"
+            type="button"
+            style={{ marginTop: 16, textDecoration: "underline" }}
+            onClick={() => login()}
+          >
+            로컬로 들어가기
+          </button>
+        ) : null}
       </div>
     </PhoneShell>
   );

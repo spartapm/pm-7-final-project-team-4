@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import { AppFrame } from "@/components/ui";
 import { CloudBanner } from "@/components/CloudBanner";
 import { ActionErrorBar } from "@/components/system";
 
@@ -27,9 +28,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <Providers>
-          <CloudBanner />
-          <ActionErrorBar />
-          {children}
+          <AppFrame>
+            <CloudBanner />
+            <ActionErrorBar />
+            {children}
+          </AppFrame>
         </Providers>
       </body>
     </html>
