@@ -41,34 +41,32 @@ export default function HomePage() {
         }}
       />
       <div className="home">
-        <div className="home-stage">
-          <img className="home-logo" src="/icons/logo_text.png" alt="Pet Memory" />
-          <div className="home-road-wrap">
-            <img className="home-road" src={road} alt="" />
-            {showSkeleton
-              ? <HomeSkeleton />
-              : homeSlots.map((mem, i) => {
-                  if (!mem) return null;
-                  const hasPhoto = mem.photos.length > 0;
-                  return (
-                    <button
-                      key={mem.id}
-                      type="button"
-                      className={`node ${SLOT_CLASS[i]}`}
-                      onClick={() => {
-                        track("home_node_click", { node_index: i + 1, item_id: mem.id });
-                        router.push(`/memory/${mem.id}?from=home`);
-                      }}
-                    >
-                      <img
-                        className={hasPhoto ? "photo" : "paw"}
-                        src={hasPhoto ? mem.photos[0] : "/icons/footprit_icon.png"}
-                        alt=""
-                      />
-                    </button>
-                  );
-                })}
-          </div>
+        <img className="home-logo" src="/icons/logo_text.png" alt="Pet Memory" />
+        <div className="home-road-wrap">
+          <img className="home-road" src={road} alt="" />
+          {showSkeleton
+            ? <HomeSkeleton />
+            : homeSlots.map((mem, i) => {
+                if (!mem) return null;
+                const hasPhoto = mem.photos.length > 0;
+                return (
+                  <button
+                    key={mem.id}
+                    type="button"
+                    className={`node ${SLOT_CLASS[i]}`}
+                    onClick={() => {
+                      track("home_node_click", { node_index: i + 1, item_id: mem.id });
+                      router.push(`/memory/${mem.id}?from=home`);
+                    }}
+                  >
+                    <img
+                      className={hasPhoto ? "photo" : "paw"}
+                      src={hasPhoto ? mem.photos[0] : "/icons/footprit_icon.png"}
+                      alt=""
+                    />
+                  </button>
+                );
+              })}
         </div>
       </div>
       <TabBar />

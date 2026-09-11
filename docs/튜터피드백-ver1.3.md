@@ -25,6 +25,7 @@
 - 슬롯 5개, TO-BE 좌표. 빈 칸은 1번(빈 원)
 - 글만: 2번(`footprit_icon.png`). 사진 포함: 3번
 - 모바일: `home_bg_*_wide.png` cover + `home_bg_*_road.png` 가로 중앙. 슬롯은 로드 기준
+- 길 이미지 하단은 탭바 상단에 맞닿고, 탭 너비 기준 중앙
 
 ## 리스트
 

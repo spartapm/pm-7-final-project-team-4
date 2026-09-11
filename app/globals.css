@@ -437,15 +437,6 @@ img { display: block; max-width: 100%; }
   z-index: 1;
   container-type: size;
 }
-.home-stage {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 390px;
-  height: 844px;
-  transform: translate(-50%, -50%) scale(min(100cqw / 390px, 100cqh / 844px));
-  transform-origin: center center;
-}
 .home-logo {
   position: absolute;
   top: 18px;
@@ -454,18 +445,15 @@ img { display: block; max-width: 100%; }
   width: 168px;
   z-index: 3;
 }
-/* road 680×1320 on 390×844: before offset (52.5, 141.5) */
+/* road 680×1320: fill the area above the tab, centered on nav width */
 .home-road-wrap {
   position: absolute;
-  left: 13.46%;
-  top: 16.77%;
-  width: 87.18%;
-  height: 78.2%;
+  left: 50%;
+  bottom: 0;
   z-index: 2;
-}
-.home-shell.after .home-road-wrap {
-  left: 14.1%;
-  top: 17%;
+  width: min(100cqw, calc(100cqh * 680 / 1320));
+  height: min(100cqh, calc(100cqw * 1320 / 680));
+  transform: translateX(-50%);
 }
 .home-road {
   display: block;
