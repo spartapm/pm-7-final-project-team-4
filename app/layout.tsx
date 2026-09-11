@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AppFrame } from "@/components/ui";
 import { CloudBanner } from "@/components/CloudBanner";
 import { ActionErrorBar } from "@/components/system";
-import { Analytics, GtmNoscript } from "@/components/analytics";
+import { GA_ID, GTM_ID } from "@/components/analytics";
 
 export const metadata: Metadata = {
   title: "Pet Memory",
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
+      <GoogleTagManager gtmId={GTM_ID} />
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -26,10 +28,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <Analytics />
       </head>
       <body>
-        <GtmNoscript />
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+            title="Google Tag Manager"
+          />
+        </noscript>
         <Providers>
           <AppFrame>
             <CloudBanner />
@@ -38,6 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </AppFrame>
         </Providers>
       </body>
+      <GoogleAnalytics gaId={GA_ID} />
     </html>
   );
 }

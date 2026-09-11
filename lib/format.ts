@@ -1,18 +1,14 @@
+"use client";
+
+import { sendGAEvent, sendGTMEvent } from "@next/third-parties/google";
+
 export function track(
   name: string,
   params?: Record<string, string | number | boolean>
 ) {
   if (typeof window === "undefined") return;
-  const payload = { event: name, ...params };
-  const w = window as Window & {
-    dataLayer?: unknown[];
-    gtag?: (...args: unknown[]) => void;
-  };
-  w.dataLayer = w.dataLayer || [];
-  w.dataLayer.push(payload);
-  if (typeof w.gtag === "function") {
-    w.gtag("event", name, params ?? {});
-  }
+  sendGTMEvent({ event: name, ...params });
+  sendGAEvent("event", name, params ?? {});
   console.debug("[ga]", name, params ?? {});
 }
 
