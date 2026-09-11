@@ -28,7 +28,9 @@ export default function MemoryPage() {
 
   useEffect(() => {
     if (!menuId && !openSort) return;
-    const close = () => {
+    const close = (e: PointerEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el?.closest(".card-del, .card-meat, .sort, .sort-menu")) return;
       setMenuId(null);
       setOpenSort(false);
     };
@@ -138,8 +140,8 @@ export default function MemoryPage() {
                 <button
                   className="card-del"
                   type="button"
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
+                  onPointerDown={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     setDelId(m.id);
                     setMenuId(null);
