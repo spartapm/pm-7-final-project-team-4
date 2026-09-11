@@ -445,14 +445,14 @@ img { display: block; max-width: 100%; }
   width: 168px;
   z-index: 3;
 }
-/* road 680×1320: fill the area above the tab, centered on nav width */
+/* Figma 390: road 340×660 (87.18% × 680/1320). Keep that size; sit on the tab. */
 .home-road-wrap {
   position: absolute;
   left: 50%;
   bottom: 0;
   z-index: 2;
-  width: min(100cqw, calc(100cqh * 680 / 1320));
-  height: min(100cqh, calc(100cqw * 1320 / 680));
+  width: min(87.18cqw, calc(100cqh * 680 / 1320));
+  height: min(calc(87.18cqw * 1320 / 680), 100cqh);
   transform: translateX(-50%);
 }
 .home-road {
