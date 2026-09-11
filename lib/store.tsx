@@ -21,7 +21,8 @@ import {
   type Memory,
   type Pet,
 } from "./types";
-import { dateKey, uid, track } from "./format";
+import { dateKey, uid } from "./format";
+import { analytics } from "./events";
 import { deleteAccount, pullAccount, pushAccount, type CloudStatus } from "./cloud";
 
 const KEY = "petmemory:v1";
@@ -247,7 +248,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       skipPush.current = Boolean(kakaoId);
       const isNew = !prev.pet;
       setState(next);
-      if (isNew) track("sign_up", { method: "kakao" });
+      if (isNew) analytics.sign_up();
       if (kakaoId) void runPull(nextId, next);
     },
     [runPull]
@@ -312,7 +313,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return rest;
       }),
     }));
-    track("logout_complete");
+    analytics.logout_complete();
   }, []);
 
   const withdraw = useCallback(() => {
@@ -322,7 +323,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(KEY);
     skipPush.current = true;
     setState(empty());
-    track("account_delete_complete");
+    analytics.account_delete_complete();
   }, []);
 
   const completeOnboarding = useCallback((pet: Pet) => {
@@ -334,10 +335,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       items: [...s.items, ...examplesFor(pet.journey, now)],
       seeded: { ...s.seeded, [pet.journey]: true },
     }));
-    track("onboarding_complete", {
-      pet_type: pet.species,
-      journey_type: pet.journey,
-    });
   }, []);
 
   const updatePet = useCallback((patch: Partial<Pet>) => {
@@ -376,7 +373,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       created.journey = s.pet.journey;
       return { ...s, items: [created, ...s.items] };
     });
-    track("list_item_create", { item_id: created.id, journey_type: created.journey });
+    analytics.list_item_create(created.id, created.journey);
     return created;
   }, []);
 
@@ -388,13 +385,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ...s,
       items: s.items.map((it) => (it.id === id ? { ...it, title: t } : it)),
     }));
-    track("list_item_edit", { item_id: id });
+    analytics.list_item_edit(id);
   }, []);
 
   const deleteItem = useCallback((id: string) => {
     touch();
     setState((s) => ({ ...s, items: s.items.filter((it) => it.id !== id) }));
-    track("list_item_delete", { item_id: id });
+    analytics.list_item_delete(id);
   }, []);
 
   const saveDraft = useCallback((id: string, draft: DraftRecord) => {
@@ -435,11 +432,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           memories: [mem, ...s.memories],
         };
       });
-      track("record_complete", {
-        journey_type: mem.journey,
-        has_photo: mem.photos.length > 0,
-        char_count: mem.story.length,
-      });
       return mem;
     },
     []
@@ -461,7 +453,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const deleteMemory = useCallback((id: string) => {
     touch();
     setState((s) => ({ ...s, memories: s.memories.filter((m) => m.id !== id) }));
-    track("memory_card_delete", { item_id: id });
+    analytics.memory_card_delete(id);
   }, []);
 
   const journey = state.pet?.journey ?? "before";

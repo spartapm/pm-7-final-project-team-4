@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, TabBar, Meatball, Modal } from "@/components/ui";
 import { MemoryGridSkeleton, QueryError } from "@/components/system";
-import { dateKey, track } from "@/lib/format";
+import { dateKey } from "@/lib/format";
+import { analytics } from "@/lib/events";
 
 export default function MemoryPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function MemoryPage() {
   }, [hydrated, loggedIn, pet, router]);
 
   useEffect(() => {
-    if (pet) track("memory_view", { card_count: visibleMemories.length, journey_type: pet.journey });
+    if (pet) analytics.memory_view(visibleMemories.length, pet.journey);
   }, [pet, visibleMemories.length]);
 
   useEffect(() => {
@@ -83,7 +84,7 @@ export default function MemoryPage() {
                 e.stopPropagation();
                 setSort("latest");
                 setOpenSort(false);
-                track("memory_sort_change", { sort_type: "latest" });
+                analytics.memory_sort_change("latest");
               }}
             >
               최신순
@@ -95,7 +96,7 @@ export default function MemoryPage() {
                 e.stopPropagation();
                 setSort("oldest");
                 setOpenSort(false);
-                track("memory_sort_change", { sort_type: "oldest" });
+                analytics.memory_sort_change("oldest");
               }}
             >
               오래된순
@@ -123,7 +124,7 @@ export default function MemoryPage() {
                     setMenuId(null);
                     return;
                   }
-                  track("memory_card_click", { item_id: m.id });
+                  analytics.memory_card_click(m.id);
                   router.push(`/memory/${m.id}?from=memory`);
                 }}
               >
@@ -158,6 +159,7 @@ export default function MemoryPage() {
                     setMenuId(null);
                     return;
                   }
+                  analytics.memory_card_click(m.id);
                   router.push(`/memory/${m.id}?from=memory`);
                 }}
               >

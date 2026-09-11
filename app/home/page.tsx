@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, TabBar } from "@/components/ui";
 import { HomeSkeleton, QueryError } from "@/components/system";
-import { track } from "@/lib/format";
+import { analytics } from "@/lib/events";
 
 const SLOT_CLASS = ["node-1", "node-2", "node-3", "node-4", "node-5"];
 
@@ -20,7 +20,7 @@ export default function HomePage() {
   }, [hydrated, loggedIn, pet, router]);
 
   useEffect(() => {
-    if (pet) track("home_view", { journey_type: pet.journey });
+    if (pet) analytics.home_view(pet.journey);
   }, [pet]);
 
   if (!hydrated || !pet) return <div className="shell" />;
@@ -55,7 +55,7 @@ export default function HomePage() {
                     type="button"
                     className={`node ${SLOT_CLASS[i]}`}
                     onClick={() => {
-                      track("home_node_click", { node_index: i + 1, item_id: mem.id });
+                      analytics.home_node_click(i + 1, mem.id);
                       router.push(`/memory/${mem.id}?from=home`);
                     }}
                   >

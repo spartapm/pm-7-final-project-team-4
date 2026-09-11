@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, KakaoIcon } from "@/components/ui";
 import { startKakaoLogin } from "@/lib/kakao";
-import { track } from "@/lib/format";
+import { analytics } from "@/lib/events";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -42,7 +42,7 @@ export default function LoginPage() {
           type="button"
           disabled={busy}
           onClick={async () => {
-            track("sign_up_start");
+            analytics.sign_up_start();
             setHint("");
             setBusy(true);
             const res = await startKakaoLogin();
@@ -52,10 +52,9 @@ export default function LoginPage() {
               login();
               return;
             }
-            track("sign_up_fail", {
-              fail_reason:
-                res.reason === "cancel" ? "auth_cancel" : res.reason === "network" ? "network" : "auth_error",
-            });
+            analytics.sign_up_fail(
+              res.reason === "cancel" ? "auth_cancel" : res.reason === "network" ? "network" : "auth_error"
+            );
             setHint("로그인에 실패했어요. 다시 시도해주세요");
           }}
         >

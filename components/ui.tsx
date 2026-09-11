@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { formatDateDots, track } from "@/lib/format";
+import { formatDateDots } from "@/lib/format";
+import { analytics } from "@/lib/events";
 
 export function AppFrame({ children }: { children: ReactNode }) {
   return (
@@ -39,10 +40,10 @@ export function PhoneShell({
 export function TabBar() {
   const path = usePathname();
   const tabs = [
-    { href: "/home", src: "/icons/nav_home_default_icon.png", key: "home" },
-    { href: "/list", src: "/icons/nav_list_default_icon.png", key: "list" },
-    { href: "/memory", src: "/icons/nav_memory_default_icon.png", key: "memory" },
-    { href: "/profile", src: "/icons/nav_profile_default_icon.png", key: "profile" },
+    { href: "/home", src: "/icons/nav_home_default_icon.png", key: "home" as const },
+    { href: "/list", src: "/icons/nav_list_default_icon.png", key: "list" as const },
+    { href: "/memory", src: "/icons/nav_memory_default_icon.png", key: "memory" as const },
+    { href: "/profile", src: "/icons/nav_profile_default_icon.png", key: "profile" as const },
   ];
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export function TabBar() {
             href={t.href}
             className={on ? "on" : ""}
             aria-label={t.key}
-            onClick={() => track("nav_tab_click", { tab_name: t.key })}
+            onClick={() => analytics.nav_tab_click(t.key)}
           >
             <img src={t.src} alt="" />
           </Link>

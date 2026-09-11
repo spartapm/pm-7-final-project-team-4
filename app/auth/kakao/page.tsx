@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell } from "@/components/ui";
 import { kakaoRedirectUri } from "@/lib/kakao";
-import { track } from "@/lib/format";
+import { analytics } from "@/lib/events";
 
 export default function KakaoCallbackPage() {
   const router = useRouter();
@@ -26,12 +26,12 @@ export default function KakaoCallbackPage() {
     const err = params.get("error");
     const code = params.get("code");
     if (err === "access_denied") {
-      track("sign_up_fail", { fail_reason: "auth_cancel" });
+      analytics.sign_up_fail("auth_cancel");
       router.replace("/?kakao=cancel");
       return;
     }
     if (err || !code) {
-      track("sign_up_fail", { fail_reason: "auth_error" });
+      analytics.sign_up_fail("auth_error");
       router.replace("/?kakao=fail");
       return;
     }
@@ -51,8 +51,9 @@ export default function KakaoCallbackPage() {
         if (!res.ok || !data.kakaoId) throw new Error(data.error || "token");
         login(data.kakaoId);
       })
-      .catch(() => {
-        track("sign_up_fail", { fail_reason: "auth_error" });
+      .catch((err: unknown) => {
+        const aborted = err instanceof DOMException && err.name === "AbortError";
+        analytics.sign_up_fail(aborted || !navigator.onLine ? "network" : "auth_error");
         setHint("로그인에 실패했어요. 다시 시도해주세요");
         router.replace("/?kakao=fail");
       })

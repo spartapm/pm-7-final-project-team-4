@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell } from "@/components/ui";
 import { MemoryDetailSkeleton, QueryError } from "@/components/system";
-import { track } from "@/lib/format";
+import { analytics } from "@/lib/events";
 
 export default function MemoryDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +23,7 @@ export default function MemoryDetailPage() {
   useEffect(() => {
     if (!mem) return;
     const from = new URLSearchParams(window.location.search).get("from") === "home" ? "home" : "memory";
-    track("memory_detail_view", { entry_point: from });
+    analytics.memory_detail_view(from);
   }, [mem]);
 
   if (!hydrated || !pet) return <div className="shell" />;
@@ -73,7 +73,7 @@ export default function MemoryDetailPage() {
           className="right"
           type="button"
           onClick={() => {
-            track("memory_edit_click", { item_id: mem.id });
+            analytics.memory_edit_click(mem.id);
             router.push(`/memory/${mem.id}/edit`);
           }}
         >

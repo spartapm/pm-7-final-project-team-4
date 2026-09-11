@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, Calendar, Modal } from "@/components/ui";
-import { todayDots, track } from "@/lib/format";
+import { todayDots } from "@/lib/format";
+import { analytics } from "@/lib/events";
 import { resizePhoto } from "@/lib/image";
 
 export function RecordEditor({
@@ -84,9 +85,13 @@ export function RecordEditor({
   }, [hydrated, loggedIn, pet, router]);
 
   useEffect(() => {
-    if (isMemory && memory) track("memory_edit_view", { item_id: memory.id });
-    else track("record_edit_view", { entry_point: "list" });
-  }, [isMemory, memory]);
+    if (!hydrated) return;
+    if (isMemory) {
+      if (memory) analytics.memory_edit_view(memory.id);
+      return;
+    }
+    if (item) analytics.record_edit_view();
+  }, [hydrated, isMemory, memory, item]);
 
   useEffect(() => {
     if (freezeForm.current) return;
@@ -118,7 +123,11 @@ export function RecordEditor({
   function mark(field: string) {
     if (interacted[field]) return;
     setInteracted((s) => ({ ...s, [field]: true }));
-    if (!isMemory) track("record_field_interact", { field_name: field });
+    if (!isMemory) {
+      if (field === "date" || field === "title" || field === "story" || field === "photo") {
+        analytics.record_field_interact(field);
+      }
+    }
   }
 
   function parkIfExpired() {
@@ -150,8 +159,8 @@ export function RecordEditor({
         setPhotos((p) => {
           if (p.length >= 5) return p;
           const next = [...p, dataUrl];
-          if (isMemory) track("memory_photo_add", { mem_photo_count: next.length });
-          else track("record_photo_add", { photo_count: next.length });
+          if (isMemory) analytics.memory_photo_add(next.length);
+          else analytics.record_photo_add(next.length);
           return next;
         });
       } catch (err) {
@@ -167,9 +176,9 @@ export function RecordEditor({
             ? "size"
             : "network";
         if (isMemory) {
-          track("memory_photo_upload_fail", { mem_fail_reason: `mem_${kind}` });
+          analytics.memory_photo_upload_fail(`mem_${kind}`);
         } else {
-          track("record_photo_upload_fail", { fail_reason: kind });
+          analytics.record_photo_upload_fail(kind);
         }
         setToast("사진 업로드에 실패했어요!");
         setTimeout(() => setToast(""), 1600);
@@ -192,10 +201,10 @@ export function RecordEditor({
     });
     setBusy(false);
     if (status === "error") {
-      if (!isMemory) track("record_temp_save_fail", { fail_reason: "network" });
+      if (!isMemory) analytics.record_temp_save_fail("network");
       return;
     }
-    if (!isMemory) track("record_temp_save");
+    if (!isMemory) analytics.record_temp_save();
     setToast("임시 저장을 완료했어요!");
     setTimeout(() => setToast(""), 1600);
   }
@@ -214,8 +223,8 @@ export function RecordEditor({
     setTitleErr(nextTitle);
     setStoryErr(nextStory);
     if (nextTitle || nextStory) {
-      if (isMemory) track("memory_complete_fail", { fail_reason: "validation" });
-      else track("record_complete_fail", { fail_reason: "validation" });
+      if (isMemory) analytics.memory_complete_fail("validation");
+      else analytics.record_complete_fail("validation");
       return;
     }
     freezeForm.current = true;
@@ -231,11 +240,14 @@ export function RecordEditor({
     if (status === "error") freezeForm.current = false;
     if (status === "error") {
       setFail(true);
-      if (isMemory) track("memory_complete_fail", { fail_reason: "server" });
-      else track("record_complete_fail", { fail_reason: "server" });
+      if (isMemory) analytics.memory_complete_fail(navigator.onLine ? "server" : "network");
+      else analytics.record_complete_fail(navigator.onLine ? "server" : "network");
       return;
     }
-    if (isMemory && memory) track("memory_complete", { item_id: memory.id });
+    if (isMemory && memory) analytics.memory_complete(memory.id);
+    else if (pet) {
+      analytics.record_complete(pet.journey, photos.length > 0, story.trim().length);
+    }
     setSaved(true);
   }
 
@@ -376,14 +388,14 @@ export function RecordEditor({
           dismissOnDim={!isMemory}
           onDim={() => setLeave(false)}
           onCancel={() => {
-            if (isMemory) track("memory_exit_modal_action", { item_id: trackId });
-            else track("record_exit_modal_action", { item_id: trackId });
+            if (isMemory) analytics.memory_exit_modal_action(trackId);
+            else analytics.record_exit_modal_action(trackId);
             leaveClean();
           }}
           onConfirm={async () => {
             if (parkIfExpired()) return;
             if (isMemory && memory) {
-              track("memory_complete_modal_action", { item_id: memory.id });
+              analytics.memory_complete_modal_action(memory.id);
               const nextTitle = title.trim() ? "" : "제목을 입력해주세요.";
               const nextStory = story.trim() ? "" : "이야기를 입력해주세요.";
               if (nextTitle || nextStory) {
@@ -402,13 +414,13 @@ export function RecordEditor({
               return;
             }
             if (itemId) {
-              track("record_complete_modal_action", { item_id: itemId });
+              analytics.record_complete_modal_action({ item_id: itemId });
               const status = await runAction(() => saveDraft(itemId, { title, story, date, photos }));
               if (status === "error") {
-                track("record_temp_save_fail", { fail_reason: "network" });
+                analytics.record_temp_save_fail("network");
                 return;
               }
-              track("record_temp_save");
+              analytics.record_temp_save();
             }
             leaveClean();
           }}
@@ -421,12 +433,12 @@ export function RecordEditor({
           confirm="메모리로 가기"
           dismissOnDim={false}
           onCancel={() => {
-            track("record_complete_modal_action", { next_action: "to_list" });
+            analytics.record_complete_modal_action({ next_action: "to_list" });
             if (isMemory && memory) router.replace(`/memory/${memory.id}`);
             else router.replace("/list");
           }}
           onConfirm={() => {
-            track("record_complete_modal_action", { next_action: "to_memory" });
+            analytics.record_complete_modal_action({ next_action: "to_memory" });
             router.replace("/memory");
           }}
         />
@@ -441,7 +453,7 @@ export function RecordEditor({
           onConfirm={() => {
             const next = retryCount + 1;
             setRetryCount(next);
-            track("record_retry_click", { retry_count: next });
+            analytics.record_retry_click(next);
             setFail(false);
           }}
         />

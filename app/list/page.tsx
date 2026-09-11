@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, TabBar, Meatball, Modal } from "@/components/ui";
-import { track } from "@/lib/format";
+import { analytics } from "@/lib/events";
 
 export default function ListPage() {
   const router = useRouter();
@@ -26,7 +26,7 @@ export default function ListPage() {
   }, [hydrated, loggedIn, pet, router]);
 
   useEffect(() => {
-    if (pet) track("list_view", { item_count: visibleItems.length, journey_type: pet.journey });
+    if (pet) analytics.list_view(visibleItems.length, pet.journey);
   }, [pet, visibleItems.length]);
 
   useEffect(() => {
@@ -129,7 +129,7 @@ export default function ListPage() {
                         setMenuId(null);
                         return;
                       }
-                      track("list_item_row_click", { item_id: it.id });
+                      analytics.list_item_row_click(it.id);
                       router.push(`/list/record?itemId=${it.id}&entry=list`);
                     }}
                   >
@@ -188,7 +188,7 @@ export default function ListPage() {
           type="button"
           aria-label="추가"
           onClick={() => {
-            track("list_add_button_click", { journey_type: pet.journey });
+            analytics.list_add_button_click(pet.journey);
             setAdding(true);
             setMenuId(null);
           }}

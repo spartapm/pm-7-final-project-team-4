@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, Modal } from "@/components/ui";
 import { NAME_RE, type Species } from "@/lib/types";
-import { track } from "@/lib/format";
+import { analytics } from "@/lib/events";
 
 export default function ProfileEditPage() {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function ProfileEditPage() {
       })
     );
     if (status === "error") return;
-    track("profile_edit_complete", { changed_fields: changed.join(",") || "none" });
+    analytics.profile_edit_complete(changed.join(",") || "none");
     router.back();
   }
 

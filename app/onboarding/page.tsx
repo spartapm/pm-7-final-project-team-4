@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell } from "@/components/ui";
 import { NAME_RE, type Journey, type Species } from "@/lib/types";
-import { track } from "@/lib/format";
+import { analytics } from "@/lib/events";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -36,9 +36,9 @@ export default function OnboardingPage() {
     if (!journey) next.journey = "여정을 선택해주세요";
     setErrors(next);
     if (Object.keys(next).length) {
-      track("onboarding_error", {
-        error_field: next.species ? "species" : next.name ? "name" : "journey",
-      });
+      analytics.onboarding_error(
+        next.species ? "species" : next.name ? "name" : next.journey ? "journey" : "name"
+      );
       return;
     }
     setBusy(true);
@@ -50,7 +50,11 @@ export default function OnboardingPage() {
         journey: journey!,
       })
     );
-    if (status === "error") setBusy(false);
+    if (status === "error") {
+      setBusy(false);
+      return;
+    }
+    analytics.onboarding_complete(species!, journey!);
   }
 
   if (!hydrated) return <div className="shell" />;
@@ -72,7 +76,7 @@ export default function OnboardingPage() {
             onClick={() => {
               setSpecies("dog");
               setErrors((e) => ({ ...e, species: "" }));
-              track("onboarding_pet_type_select", { pet_type: "dog" });
+              analytics.onboarding_pet_type_select("dog");
             }}
           >
             <div className="pic">
@@ -86,7 +90,7 @@ export default function OnboardingPage() {
             onClick={() => {
               setSpecies("cat");
               setErrors((e) => ({ ...e, species: "" }));
-              track("onboarding_pet_type_select", { pet_type: "cat" });
+              analytics.onboarding_pet_type_select("cat");
             }}
           >
             <div className="pic">

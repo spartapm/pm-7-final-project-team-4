@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, TabBar, Modal } from "@/components/ui";
-import { SPECIES_KO, track } from "@/lib/format";
+import { SPECIES_KO } from "@/lib/format";
+import { analytics } from "@/lib/events";
 import type { Journey } from "@/lib/types";
 
 export default function ProfilePage() {
@@ -21,7 +22,7 @@ export default function ProfilePage() {
   }, [hydrated, loggedIn, pet, router]);
 
   useEffect(() => {
-    if (pet) track("profile_view", { journey_type: pet.journey });
+    if (pet) analytics.profile_view(pet.journey);
   }, [pet]);
 
   if (!hydrated || !pet) return <div className="shell" />;
@@ -108,14 +109,14 @@ export default function ProfilePage() {
           busy={actionBusy}
           onCancel={() => {
             if (actionBusy) return;
-            track("journey_switch_cancel");
+            analytics.journey_switch_cancel();
             setModal(null);
             setHoldJourney(null);
           }}
           onConfirm={async () => {
             const status = await runAction(() => switchJourney("after"));
-            track("journey_switch_confirm", { from_type: "before", to_type: "after" });
             if (status === "error") return;
+            analytics.journey_switch_confirm("before", "after");
             setModal(null);
             setHoldJourney(null);
           }}
@@ -137,14 +138,14 @@ export default function ProfilePage() {
           busy={actionBusy}
           onCancel={() => {
             if (actionBusy) return;
-            track("journey_switch_cancel");
+            analytics.journey_switch_cancel();
             setModal(null);
             setHoldJourney(null);
           }}
           onConfirm={async () => {
             const status = await runAction(() => switchJourney("before"));
-            track("journey_switch_confirm", { from_type: "after", to_type: "before" });
             if (status === "error") return;
+            analytics.journey_switch_confirm("after", "before");
             setModal(null);
             setHoldJourney(null);
           }}
