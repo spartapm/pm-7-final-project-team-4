@@ -436,7 +436,7 @@ export function RecordEditor({
           title="기록에 실패했어요!"
           cancel={null}
           confirm="다시하기"
-          onDim={() => setFail(false)}
+          dismissOnDim={false}
           onCancel={() => setFail(false)}
           onConfirm={() => {
             const next = retryCount + 1;
