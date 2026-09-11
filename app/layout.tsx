@@ -4,6 +4,7 @@ import { Providers } from "./providers";
 import { AppFrame } from "@/components/ui";
 import { CloudBanner } from "@/components/CloudBanner";
 import { ActionErrorBar } from "@/components/system";
+import { Analytics, GtmNoscript } from "@/components/analytics";
 
 export const metadata: Metadata = {
   title: "Pet Memory",
@@ -25,8 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <Analytics />
       </head>
       <body>
+        <GtmNoscript />
         <Providers>
           <AppFrame>
             <CloudBanner />

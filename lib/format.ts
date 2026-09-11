@@ -4,9 +4,15 @@ export function track(
 ) {
   if (typeof window === "undefined") return;
   const payload = { event: name, ...params };
-  const w = window as Window & { dataLayer?: unknown[] };
+  const w = window as Window & {
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
+  };
   w.dataLayer = w.dataLayer || [];
   w.dataLayer.push(payload);
+  if (typeof w.gtag === "function") {
+    w.gtag("event", name, params ?? {});
+  }
   console.debug("[ga]", name, params ?? {});
 }
 
