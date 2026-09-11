@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell, TabBar } from "@/components/ui";
@@ -12,8 +12,6 @@ const SLOT_CLASS = ["node-1", "node-2", "node-3", "node-4", "node-5"];
 export default function HomePage() {
   const router = useRouter();
   const { hydrated, loggedIn, pet, homeSlots, cloudStatus, querying, showSkeleton } = useStore();
-  const homeRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -24,29 +22,6 @@ export default function HomePage() {
   useEffect(() => {
     if (pet) track("home_view", { journey_type: pet.journey });
   }, [pet]);
-
-  useEffect(() => {
-    const home = homeRef.current;
-    const stage = stageRef.current;
-    if (!home || !stage) return;
-    const apply = () => {
-      const mobile = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
-      if (!mobile) {
-        stage.style.transform = "";
-        return;
-      }
-      const s = Math.min(home.clientWidth / 390, home.clientHeight / 844, 1);
-      stage.style.transform = `translate(-50%, -50%) scale(${s})`;
-    };
-    apply();
-    const ro = new ResizeObserver(apply);
-    ro.observe(home);
-    window.addEventListener("resize", apply);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", apply);
-    };
-  }, [hydrated, pet]);
 
   if (!hydrated || !pet) return <div className="shell" />;
 
@@ -65,8 +40,8 @@ export default function HomePage() {
           ["--land" as string]: `url(${land})`,
         }}
       />
-      <div className="home" ref={homeRef}>
-        <div className="home-stage" ref={stageRef}>
+      <div className="home">
+        <div className="home-stage">
           <img className="home-logo" src="/icons/logo_text.png" alt="Pet Memory" />
           <div className="home-road-wrap">
             <img className="home-road" src={road} alt="" />
