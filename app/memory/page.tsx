@@ -29,17 +29,16 @@ export default function MemoryPage() {
 
   useEffect(() => {
     if (!menuId && !openSort) return;
+    const openedAt = Date.now();
     const close = (e: PointerEvent) => {
+      if (Date.now() - openedAt < 400) return;
       const el = e.target as HTMLElement | null;
       if (el?.closest(".card-del, .card-meat, .sort, .sort-menu")) return;
       setMenuId(null);
       setOpenSort(false);
     };
-    const t = window.setTimeout(() => document.addEventListener("pointerdown", close), 0);
-    return () => {
-      window.clearTimeout(t);
-      document.removeEventListener("pointerdown", close);
-    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
   }, [menuId, openSort]);
 
   const cards = useMemo(() => {
@@ -79,7 +78,7 @@ export default function MemoryPage() {
           <div className="sort-menu" onPointerDown={(e) => e.stopPropagation()}>
             <button
               type="button"
-              onPointerDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 setSort("latest");
@@ -91,7 +90,7 @@ export default function MemoryPage() {
             </button>
             <button
               type="button"
-              onPointerDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 setSort("oldest");
@@ -113,7 +112,7 @@ export default function MemoryPage() {
           리스트를 작성해보세요!
         </div>
       ) : (
-        <div className="scroll grid">
+        <div className={`scroll grid${openSort ? " menu-blocked" : ""}`}>
           {cards.map((m) => (
             <div key={m.id} className={`card${menuId === m.id ? " menu-open" : ""}`}>
               <button
@@ -141,7 +140,7 @@ export default function MemoryPage() {
                 <button
                   className="card-del"
                   type="button"
-                  onPointerDown={(e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setDelId(m.id);

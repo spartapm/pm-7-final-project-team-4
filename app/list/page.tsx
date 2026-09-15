@@ -35,12 +35,15 @@ export default function ListPage() {
 
   useEffect(() => {
     if (!menuId) return;
-    const close = () => setMenuId(null);
-    const t = window.setTimeout(() => document.addEventListener("pointerdown", close), 0);
-    return () => {
-      window.clearTimeout(t);
-      document.removeEventListener("pointerdown", close);
+    const openedAt = Date.now();
+    const close = (e: PointerEvent) => {
+      if (Date.now() - openedAt < 400) return;
+      const el = e.target as HTMLElement | null;
+      if (el?.closest(".meat, .meat-menu")) return;
+      setMenuId(null);
     };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
   }, [menuId]);
 
   if (!hydrated || !pet) return <div className="shell" />;
@@ -146,7 +149,7 @@ export default function ListPage() {
                   <div className="meat-menu" onPointerDown={(e) => e.stopPropagation()}>
                     <button
                       type="button"
-                      onPointerDown={(e) => {
+                      onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         blockRowClick.current = true;
@@ -162,7 +165,7 @@ export default function ListPage() {
                     </button>
                     <button
                       type="button"
-                      onPointerDown={(e) => {
+                      onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         blockRowClick.current = true;

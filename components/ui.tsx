@@ -2,11 +2,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { formatDateDots } from "@/lib/format";
 import { analytics } from "@/lib/events";
 
 export function AppFrame({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    const root = document.documentElement;
+    const apply = () => {
+      const coarse = window.matchMedia("(pointer: coarse)").matches;
+      const noHover = window.matchMedia("(hover: none)").matches;
+      const touch = navigator.maxTouchPoints > 0 || "ontouchend" in window;
+      const narrow = window.innerWidth <= 820;
+      root.classList.toggle("is-phone", coarse || noHover || (touch && narrow));
+    };
+    apply();
+    window.addEventListener("resize", apply);
+    const coarseMq = window.matchMedia("(pointer: coarse)");
+    const hoverMq = window.matchMedia("(hover: none)");
+    coarseMq.addEventListener("change", apply);
+    hoverMq.addEventListener("change", apply);
+    return () => {
+      window.removeEventListener("resize", apply);
+      coarseMq.removeEventListener("change", apply);
+      hoverMq.removeEventListener("change", apply);
+    };
+  }, []);
+
   return (
     <div className="viewport">
       <div className="web-bg" aria-hidden />
@@ -72,14 +94,25 @@ export function TabBar() {
 }
 
 export function Meatball({ onClick, label = "더보기" }: { onClick: () => void; label?: string }) {
+  const fromPointer = useRef(false);
   return (
     <button
       className="meat"
       type="button"
       aria-label={label}
-      onPointerDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        fromPointer.current = true;
+        onClick();
+      }}
       onClick={(e) => {
         e.stopPropagation();
+        e.preventDefault();
+        if (fromPointer.current) {
+          fromPointer.current = false;
+          return;
+        }
         onClick();
       }}
     >
@@ -111,18 +144,32 @@ export function Modal({
   busy?: boolean;
   dismissOnDim?: boolean;
 }) {
+  const armed = useRef(false);
+  useEffect(() => {
+    armed.current = false;
+    const t = window.setTimeout(() => {
+      armed.current = true;
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  const guard = (fn: () => void) => () => {
+    if (!armed.current) return;
+    fn();
+  };
+
   return (
-    <div className="dim" onClick={dismissOnDim ? onDim ?? onCancel : undefined}>
+    <div className="dim" onClick={dismissOnDim ? guard(onDim ?? onCancel) : undefined}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h2>{title}</h2>
         {body ? <p>{body}</p> : null}
         <div className="modal-btns">
           {cancel != null ? (
-            <button className="btn-ghost" type="button" onClick={onCancel} disabled={busy}>
+            <button className="btn-ghost" type="button" onClick={guard(onCancel)} disabled={busy}>
               {cancel}
             </button>
           ) : null}
-          <button className="btn-fill" type="button" onClick={onConfirm} disabled={busy}>
+          <button className="btn-fill" type="button" onClick={guard(onConfirm)} disabled={busy}>
             {busy ? <span className="spinner" /> : confirm}
           </button>
         </div>
