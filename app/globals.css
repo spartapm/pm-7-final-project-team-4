@@ -480,7 +480,7 @@ img { display: block; max-width: 100%; }
   width: 168px;
   z-index: 3;
 }
-/* Design 390: road 250×485 (64.10%). Sit on the tab. Asset is 500×970 @2x. */
+/* Viewport < 750: compact 250×485 road. ≥ 750: web 340×660 (680/1320) road. Sit on the tab. */
 .home-road-wrap {
   position: absolute;
   left: 50%;
@@ -492,10 +492,21 @@ img { display: block; max-width: 100%; }
 }
 .home-road {
   display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: fill;
   pointer-events: none;
+}
+.home-road-tall { display: none; }
+@media (min-height: 750px) {
+  .home-road-wrap {
+    width: min(87.18cqw, calc(100cqh * 680 / 1320));
+    height: min(calc(87.18cqw * 1320 / 680), 100cqh);
+  }
+  .home-road-compact { display: none; }
+  .home-road-tall { display: block; }
 }
 .node {
   position: absolute;

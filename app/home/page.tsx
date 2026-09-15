@@ -26,7 +26,8 @@ export default function HomePage() {
   if (!hydrated || !pet) return <div className="shell" />;
 
   const land = pet.journey === "before" ? "/bg/home_bg_before_wide.png" : "/bg/home_bg_after_wide.png";
-  const road = pet.journey === "before" ? "/bg/home_bg_before_road.png" : "/bg/home_bg_after_road.png";
+  const compactRoad = pet.journey === "before" ? "/bg/home_bg_before_road.png" : "/bg/home_bg_after_road.png";
+  const tallRoad = pet.journey === "before" ? "/bg/web_home_bg_before_road.png" : "/bg/web_home_bg_after_road.png";
 
   if (cloudStatus === "error" && !querying) {
     return <QueryError bg={land} />;
@@ -43,7 +44,8 @@ export default function HomePage() {
       <div className="home">
         <img className="home-logo" src="/icons/logo_text.png" alt="Pet Memory" />
         <div className="home-road-wrap">
-          <img className="home-road" src={road} alt="" />
+          <img className="home-road home-road-compact" src={compactRoad} alt="" />
+          <img className="home-road home-road-tall" src={tallRoad} alt="" />
           {showSkeleton
             ? <HomeSkeleton />
             : homeSlots.map((mem, i) => {
