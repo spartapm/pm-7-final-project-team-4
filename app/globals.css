@@ -499,7 +499,7 @@ img { display: block; max-width: 100%; }
 }
 .node {
   position: absolute;
-  width: 30.88%;
+  width: 30.5%;
   aspect-ratio: 1;
   height: auto;
   border-radius: 50%;
@@ -510,6 +510,8 @@ img { display: block; max-width: 100%; }
   padding: 0;
   transform: translate(-50%, -50%);
 }
+.home-shell.before .node { width: 31.0%; }
+.home-shell.after .node { width: 30.5%; }
 .node img.photo {
   width: 100%;
   height: 100%;
@@ -523,17 +525,17 @@ img { display: block; max-width: 100%; }
   background: #f4ead8;
 }
 
-/* circle centers measured from home_bg_*_road.png */
-.home-shell.before .node-1 { left: 27.2%; top: 9.1%; }
-.home-shell.before .node-2 { left: 71.3%; top: 29.0%; }
-.home-shell.before .node-3 { left: 27.1%; top: 48.0%; }
-.home-shell.before .node-4 { left: 71.3%; top: 66.5%; }
-.home-shell.before .node-5 { left: 27.2%; top: 85.8%; }
+/* circle centers / diameters measured from 500×970 home_bg_*_road.png */
+.home-shell.before .node-1 { left: 27.3%; top: 9.0%; }
+.home-shell.before .node-2 { left: 71.4%; top: 29.0%; }
+.home-shell.before .node-3 { left: 27.1%; top: 47.9%; }
+.home-shell.before .node-4 { left: 71.2%; top: 66.5%; }
+.home-shell.before .node-5 { left: 27.2%; top: 85.9%; }
 .home-shell.after .node-1 { left: 26.9%; top: 9.0%; }
-.home-shell.after .node-2 { left: 69.1%; top: 28.9%; }
-.home-shell.after .node-3 { left: 27.1%; top: 47.9%; }
-.home-shell.after .node-4 { left: 69.3%; top: 66.7%; }
-.home-shell.after .node-5 { left: 27.1%; top: 86.4%; }
+.home-shell.after .node-2 { left: 69.0%; top: 28.8%; }
+.home-shell.after .node-3 { left: 27.0%; top: 47.8%; }
+.home-shell.after .node-4 { left: 69.1%; top: 66.7%; }
+.home-shell.after .node-5 { left: 27.0%; top: 86.4%; }
 
 @media (hover: none) and (pointer: coarse) {
   .home-land {
@@ -1359,13 +1361,15 @@ img { display: block; max-width: 100%; }
 }
 .skel-node {
   position: absolute;
-  width: 30.88%;
+  width: 30.5%;
   aspect-ratio: 1;
   height: auto;
   border-radius: 50%;
   z-index: 2;
   transform: translate(-50%, -50%);
 }
+.home-shell.before .skel-node { width: 31.0%; }
+.home-shell.after .skel-node { width: 30.5%; }
 .skel-card {
   height: 168px;
   border-radius: 12px;
