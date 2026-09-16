@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell } from "@/components/ui";
@@ -16,11 +16,12 @@ export default function OnboardingPage() {
   const [journey, setJourney] = useState<Journey | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     if (!hydrated) return;
     if (!loggedIn) router.replace("/");
-    else if (pet) router.replace("/home");
+    else if (pet && !submittingRef.current) router.replace("/home");
   }, [hydrated, loggedIn, pet, router]);
 
   async function submit() {
@@ -41,6 +42,7 @@ export default function OnboardingPage() {
       );
       return;
     }
+    submittingRef.current = true;
     setBusy(true);
     const status = await runAction(() =>
       completeOnboarding({
@@ -51,10 +53,12 @@ export default function OnboardingPage() {
       })
     );
     if (status === "error") {
+      submittingRef.current = false;
       setBusy(false);
       return;
     }
     analytics.onboarding_complete(species!, journey!);
+    router.replace("/home");
   }
 
   if (!hydrated) return <div className="shell" />;
