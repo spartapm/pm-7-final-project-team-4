@@ -49,7 +49,7 @@ export default function ListPage() {
   if (!hydrated || !pet) return <div className="shell" />;
 
   const title = pet.journey === "before" ? "버킷 리스트" : "추억 리스트";
-  const bg = pet.journey === "before" ? "/bg/bg_before.png" : "/bg/bg_after.png";
+  const bg = pet.journey === "before" ? "/bg/bg_before_list_mem_ver2.png" : "/bg/bg_after_list_mem_ver2.png";
 
   function commitAdd() {
     const t = addVal.trim();

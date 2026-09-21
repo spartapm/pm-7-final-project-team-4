@@ -1,6 +1,20 @@
 "use client";
 
 import { sendGAEvent, sendGTMEvent } from "@next/third-parties/google";
+import { GA_ID } from "@/components/analytics";
+
+export function setAnalyticsUserId(id: string | null) {
+  if (typeof window === "undefined") return;
+  const gtag = (window as { gtag?: (...args: unknown[]) => void }).gtag;
+  if (typeof gtag !== "function") return;
+  if (id) {
+    gtag("set", { user_id: id });
+    gtag("config", GA_ID, { user_id: id });
+  } else {
+    gtag("set", { user_id: undefined });
+    gtag("config", GA_ID, { user_id: "" });
+  }
+}
 
 export function track(
   name: string,

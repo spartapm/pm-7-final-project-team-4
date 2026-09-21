@@ -1,9 +1,15 @@
 "use client";
 
-import { track } from "./format";
+import { setAnalyticsUserId, track } from "./format";
 
 /** 이벤트 트래킹 명세서의 이벤트명·파라미터. */
 export const analytics = {
+  set_user_id(id: string) {
+    setAnalyticsUserId(id);
+  },
+  clear_user_id() {
+    setAnalyticsUserId(null);
+  },
   sign_up_start() {
     track("sign_up_start");
   },

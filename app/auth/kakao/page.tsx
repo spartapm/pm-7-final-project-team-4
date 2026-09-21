@@ -61,7 +61,7 @@ export default function KakaoCallbackPage() {
   }, [hydrated, loggedIn, pet, login, router]);
 
   return (
-    <PhoneShell bg="/bg/onboarding_bg_01.png">
+    <PhoneShell bg="/bg/onboarding_bg_01_ver2.png">
       <div className="login">
         <p className="login-hint">{hint}</p>
       </div>

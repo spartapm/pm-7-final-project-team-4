@@ -185,6 +185,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     stateRef.current = local;
     setState(local);
     setHydrated(true);
+    if (local.loggedIn) analytics.set_user_id(local.accountId);
     void runPull(local.accountId, local);
   }, [runPull]);
 
@@ -196,6 +197,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (Date.now() - s.loginAt <= SESSION_MS) return;
       touch();
       setState((prev) => ({ ...prev, loggedIn: false, loginAt: null }));
+      analytics.clear_user_id();
     };
     expireIdle();
     const timer = window.setInterval(expireIdle, 30_000);
@@ -248,6 +250,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       skipPush.current = Boolean(kakaoId);
       const isNew = !prev.pet;
       setState(next);
+      analytics.set_user_id(nextId);
       if (isNew) analytics.sign_up();
       if (kakaoId) void runPull(nextId, next);
     },
@@ -300,6 +303,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ? s.items.map((it) => (it.id === itemId ? { ...it, draft } : it))
           : s.items,
     }));
+    analytics.clear_user_id();
   }, []);
 
   const logout = useCallback(() => {
@@ -313,6 +317,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return rest;
       }),
     }));
+    analytics.clear_user_id();
     analytics.logout_complete();
   }, []);
 
@@ -323,6 +328,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(KEY);
     skipPush.current = true;
     setState(empty());
+    analytics.clear_user_id();
     analytics.account_delete_complete();
   }, []);
 

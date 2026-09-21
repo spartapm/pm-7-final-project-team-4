@@ -39,10 +39,7 @@ export default function ProfilePage() {
           <button className="edit" type="button" onClick={() => router.push("/profile/edit")}>
             <img src="/icons/profile_modify_icon.png" alt="수정" />
           </button>
-          <div className={`avatar${shownJourney === "after" ? " after" : ""}`}>
-            {shownJourney === "after" ? (
-              <img className="wings" src="/icons/profile_wings.png" alt="" />
-            ) : null}
+          <div className="avatar">
             <img
               className={`face${pet.photo ? " photo" : ""}`}
               src={pet.photo || "/icons/profile_default.png"}

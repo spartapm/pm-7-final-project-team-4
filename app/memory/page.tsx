@@ -54,7 +54,7 @@ export default function MemoryPage() {
 
   if (!hydrated || !pet) return <div className="shell" />;
 
-  const bg = pet.journey === "before" ? "/bg/bg_before.png" : "/bg/bg_after.png";
+  const bg = pet.journey === "before" ? "/bg/bg_before_list_mem_ver2.png" : "/bg/bg_after_list_mem_ver2.png";
 
   if (cloudStatus === "error" && !querying) {
     return <QueryError bg={bg} />;

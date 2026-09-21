@@ -6,8 +6,17 @@ import { useStore } from "@/lib/store";
 import { PhoneShell, TabBar } from "@/components/ui";
 import { HomeSkeleton, QueryError } from "@/components/system";
 import { analytics } from "@/lib/events";
+import type { Journey, Species } from "@/lib/types";
 
 const SLOT_CLASS = ["node-1", "node-2", "node-3", "node-4", "node-5"];
+
+function roadSrc(journey: Journey, species: Species, filled: number, tall: boolean) {
+  const n = Math.min(Math.max(filled, 0), 5);
+  const web = tall ? "web_" : "";
+  if (journey === "before") return `/bg/${web}before_${species}_road_${n}.png`;
+  if (n === 5) return `/bg/${web}after_road_5_${species}.png`;
+  return `/bg/${web}after_road_${n}.png`;
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -25,9 +34,12 @@ export default function HomePage() {
 
   if (!hydrated || !pet) return <div className="shell" />;
 
-  const land = pet.journey === "before" ? "/bg/home_bg_before_wide.png" : "/bg/home_bg_after_wide.png";
-  const compactRoad = pet.journey === "before" ? "/bg/home_bg_before_road.png" : "/bg/home_bg_after_road.png";
-  const tallRoad = pet.journey === "before" ? "/bg/web_home_bg_before_road.png" : "/bg/web_home_bg_after_road.png";
+  const land = pet.journey === "before" ? "/bg/bg_before_ver2.png" : "/bg/bg_after_ver2.png";
+  const filled = homeSlots.filter(Boolean).length;
+  const compactRoad = roadSrc(pet.journey, pet.species, filled, false);
+  const tallRoad = roadSrc(pet.journey, pet.species, filled, true);
+  const logo =
+    pet.journey === "before" ? "/icons/logo_text_guide_before.png" : "/icons/logo_text_guide_after.png";
 
   if (cloudStatus === "error" && !querying) {
     return <QueryError bg={land} />;
@@ -42,7 +54,7 @@ export default function HomePage() {
         }}
       />
       <div className="home">
-        <img className="home-logo" src="/icons/logo_text.png" alt="Pet Memory" />
+        <img className="home-logo" src={logo} alt="Pet Memory" />
         <div className="home-road-wrap">
           <img className="home-road home-road-compact" src={compactRoad} alt="" />
           <img className="home-road home-road-tall" src={tallRoad} alt="" />

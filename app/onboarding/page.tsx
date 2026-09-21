@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell } from "@/components/ui";
 import { NAME_RE, type Journey, type Species } from "@/lib/types";
+import { SPECIES_KO } from "@/lib/format";
 import { analytics } from "@/lib/events";
 
 export default function OnboardingPage() {
@@ -64,13 +65,14 @@ export default function OnboardingPage() {
   if (!hydrated) return <div className="shell" />;
 
   return (
-    <PhoneShell bg="/bg/onboarding_bg_02.png">
+    <PhoneShell bg="/bg/onboarding_bg_02_ver2.png">
       <div className="ob">
         <h1>반려동물 정보 입력</h1>
         <p className="sub">어떤 아이와 함께 하시나요?</p>
 
         <div className="ob-label-row">
           <div className="ob-label">종류*</div>
+          {species ? <div className="ob-selected">{SPECIES_KO[species]}</div> : null}
           {errors.species ? <div className="field-err">{errors.species}</div> : null}
         </div>
         <div className="species">

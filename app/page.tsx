@@ -34,7 +34,7 @@ export default function LoginPage() {
   if (!hydrated) return <div className="shell" />;
 
   return (
-    <PhoneShell bg="/bg/onboarding_bg_01.png">
+    <PhoneShell bg="/bg/onboarding_bg_01_ver2.png">
       <div className="login">
         <img className="login-logo" src="/icons/main_logo_text.png" alt="Pet Memory" />
         <button
