@@ -104,7 +104,7 @@ export default function OnboardingPage() {
           </button>
           <button type="button" className="species-card soon" disabled aria-disabled="true">
             <div className="pic">
-              <span className="soon-mark">?</span>
+              <img src="/icons/ready_img.png" alt="" />
             </div>
             <span>준비 중</span>
           </button>

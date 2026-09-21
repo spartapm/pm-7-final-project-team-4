@@ -272,47 +272,35 @@ img { display: block; max-width: 100%; }
   justify-content: center;
 }
 .species-card {
-  width: 88px;
+  width: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
 }
 .species-card .pic {
-  width: 80px;
-  height: 72px;
+  width: 100px;
+  height: 100px;
   border-radius: 10px;
   overflow: hidden;
   background: #fbf6ef;
-  border: 1px solid #cfccc9;
+  border: 2px solid #fff;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.species-card.on .pic { border-color: var(--selected); }
+.species-card.on .pic { border: 4px solid #000; }
 .species-card.err .pic { border-color: var(--danger); }
-.species-card img { width: 72px; height: 72px; object-fit: contain; }
+.species-card img { width: 100%; height: 100%; object-fit: contain; }
 .species-card span {
-  font-family: var(--font-display);
-  font-size: 13px;
+  font-family: var(--font);
+  font-size: 14px;
+  color: #000;
 }
 .species-card.soon {
   cursor: default;
   opacity: 1;
-}
-.species-card.soon .pic {
-  background: #fbf6ef;
-  border: 1px solid #cfccc9;
-}
-.species-card.soon .soon-mark {
-  font-family: var(--font-display);
-  font-size: 40px;
-  line-height: 1;
-  color: #6f483a;
-}
-.species-card.soon span {
-  font-size: 12px;
-  color: #111;
 }
 .ob-input {
   width: 100%;
@@ -391,12 +379,15 @@ img { display: block; max-width: 100%; }
   height: 48px;
   padding: 0;
   border: 1px solid #000;
-  border-radius: 8px;
+  border-radius: 10px;
   background: #6f483a;
   color: #fff;
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 24px;
   letter-spacing: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .ob-done:disabled {
   opacity: 0.7;
@@ -506,7 +497,7 @@ img { display: block; max-width: 100%; }
   height: auto;
   z-index: 3;
 }
-/* Viewport < 750: compact 250×485 road. ≥ 750: web 340×660 (680/1320) road. Sit on the tab. */
+/* Viewport < 750: compact 250×485 road. ≥ 750: smaller web road (Figma ver2.1 ~77.4% phone width). Sit on the tab. */
 .home-road-wrap {
   position: absolute;
   left: 50%;
@@ -528,8 +519,8 @@ img { display: block; max-width: 100%; }
 .home-road-tall { display: none; }
 @media (min-height: 750px) {
   .home-road-wrap {
-    width: min(87.18cqw, calc(100cqh * 680 / 1320));
-    height: min(calc(87.18cqw * 1320 / 680), 100cqh);
+    width: min(77.44cqw, calc(100cqh * 250 / 485));
+    height: min(calc(77.44cqw * 485 / 250), 100cqh);
   }
   .home-road-compact { display: none; }
   .home-road-tall { display: block; }
