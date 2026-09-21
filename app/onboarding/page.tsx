@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { PhoneShell } from "@/components/ui";
 import { NAME_RE, type Journey, type Species } from "@/lib/types";
-import { SPECIES_KO } from "@/lib/format";
 import { analytics } from "@/lib/events";
 
 export default function OnboardingPage() {
@@ -72,7 +71,6 @@ export default function OnboardingPage() {
 
         <div className="ob-label-row">
           <div className="ob-label">종류*</div>
-          {species ? <div className="ob-selected">{SPECIES_KO[species]}</div> : null}
           {errors.species ? <div className="field-err">{errors.species}</div> : null}
         </div>
         <div className="species">
@@ -103,6 +101,12 @@ export default function OnboardingPage() {
               <img src="/icons/cat_img.png" alt="" />
             </div>
             <span>고양이</span>
+          </button>
+          <button type="button" className="species-card soon" disabled aria-disabled="true">
+            <div className="pic">
+              <span className="soon-mark">?</span>
+            </div>
+            <span>준비 중</span>
           </button>
         </div>
 

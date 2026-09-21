@@ -262,44 +262,57 @@ img { display: block; max-width: 100%; }
   color: #111;
 }
 .ob-label-row .ob-label { margin: 0; }
-.ob-selected {
-  font-family: var(--font-display);
-  font-size: 16px;
-  color: #6f483a;
-}
 .ob-label-row .field-err {
   margin: 0;
   flex: none;
 }
 .species {
   display: flex;
-  gap: 18px;
+  gap: 10px;
   justify-content: center;
 }
 .species-card {
-  width: 96px;
+  width: 88px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
 }
 .species-card .pic {
-  width: 88px;
-  height: 80px;
-  border-radius: 8px;
+  width: 80px;
+  height: 72px;
+  border-radius: 10px;
   overflow: hidden;
   background: #fbf6ef;
-  border: 1.5px solid #cfc7c0;
+  border: 1px solid #cfccc9;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .species-card.on .pic { border-color: var(--selected); }
 .species-card.err .pic { border-color: var(--danger); }
-.species-card img { width: 78px; height: 78px; object-fit: contain; }
+.species-card img { width: 72px; height: 72px; object-fit: contain; }
 .species-card span {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: 13px;
+}
+.species-card.soon {
+  cursor: default;
+  opacity: 1;
+}
+.species-card.soon .pic {
+  background: #fbf6ef;
+  border: 1px solid #cfccc9;
+}
+.species-card.soon .soon-mark {
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 1;
+  color: #6f483a;
+}
+.species-card.soon span {
+  font-size: 12px;
+  color: #111;
 }
 .ob-input {
   width: 100%;
@@ -377,13 +390,20 @@ img { display: block; max-width: 100%; }
   margin-top: auto;
   height: 48px;
   padding: 0;
-  border: 1.5px solid #111;
-  border-radius: 24px;
-  background: #fbf6ef;
-  color: #111;
+  border: 1px solid #000;
+  border-radius: 8px;
+  background: #6f483a;
+  color: #fff;
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 28px;
   letter-spacing: 0;
+}
+.ob-done:disabled {
+  opacity: 0.7;
+}
+.ob-done .spinner {
+  border-color: rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
 }
 
 /* ===== Header — Figma 1379:2146 실선: 스크롤과 분리, 상단 Fixed, 콘텐츠보다 상위 ===== */
