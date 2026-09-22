@@ -74,6 +74,7 @@ export function RecordEditor({
   const [retryCount, setRetryCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const storyRef = useRef<HTMLTextAreaElement>(null);
+  const toastTimer = useRef<number>(0);
   const hadRecord = useRef(Boolean(item || memory));
   const freezeForm = useRef(false);
   if (item || memory) hadRecord.current = true;
@@ -102,12 +103,13 @@ export function RecordEditor({
     setPhotos(initial.photos);
   }, [initial, item, memory]);
 
-  useEffect(() => {
-    const el = storyRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.max(140, el.scrollHeight)}px`;
-  }, [story]);
+  function showToast(msg: string, ms = 1600) {
+    window.clearTimeout(toastTimer.current);
+    setToast(msg);
+    toastTimer.current = window.setTimeout(() => setToast(""), ms);
+  }
+
+  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
   const dirty =
     title !== initial.title ||
@@ -155,6 +157,12 @@ export function RecordEditor({
     const list = Array.from(files).slice(0, room);
     for (const file of list) {
       try {
+        if (!file.type.startsWith("image/")) {
+          throw new Error("format");
+        }
+        if (file.size > 15 * 1024 * 1024) {
+          throw new Error("image");
+        }
         const dataUrl = await resizePhoto(file);
         setPhotos((p) => {
           if (p.length >= 5) return p;
@@ -175,13 +183,12 @@ export function RecordEditor({
           : file.size > 15 * 1024 * 1024 || msg === "image"
             ? "size"
             : "network";
+        showToast("사진 업로드에 실패했어요!");
         if (isMemory) {
           analytics.memory_photo_upload_fail(`mem_${kind}`);
         } else {
           analytics.record_photo_upload_fail(kind);
         }
-        setToast("사진 업로드에 실패했어요!");
-        setTimeout(() => setToast(""), 1600);
       }
     }
   }
@@ -202,11 +209,11 @@ export function RecordEditor({
     setBusy(false);
     if (status === "error") {
       if (!isMemory) analytics.record_temp_save_fail("network");
+      showToast("임시 저장을 실패했어요!");
       return;
     }
     if (!isMemory) analytics.record_temp_save();
-    setToast("임시 저장을 완료했어요!");
-    setTimeout(() => setToast(""), 1600);
+    showToast("임시 저장을 완료했어요!");
   }
 
   async function persistMemory() {
@@ -279,7 +286,7 @@ export function RecordEditor({
         <div />
       </div>
       <div className="form-page">
-        <div className="scroll form">
+        <div className="form">
           <label className="lbl">날짜</label>
           <input
             type="text"
@@ -466,12 +473,15 @@ export function RecordEditor({
           onCancel={() => setPhotoPerm(false)}
           onConfirm={() => {
             setPhotoPerm(false);
-            setToast("브라우저 주소창 자물쇠에서 사진 권한을 허용해주세요");
-            setTimeout(() => setToast(""), 2400);
+            showToast("브라우저 주소창 자물쇠에서 사진 권한을 허용해주세요", 2400);
           }}
         />
       ) : null}
-      {toast ? <div className="toast">{toast}</div> : null}
+      {toast ? (
+        <div className="toast" role="status">
+          {toast}
+        </div>
+      ) : null}
     </PhoneShell>
   );
 }
